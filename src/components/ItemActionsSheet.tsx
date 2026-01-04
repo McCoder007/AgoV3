@@ -12,7 +12,7 @@ interface ItemActionsSheetProps {
   itemId: string;
   itemTitle: string;
   onEdit: () => void;
-  buttonRef: React.RefObject<HTMLButtonElement>;
+  buttonRef: React.RefObject<HTMLButtonElement | null>;
 }
 
 export function ItemActionsSheet({

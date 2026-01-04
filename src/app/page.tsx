@@ -106,8 +106,8 @@ export default function Home() {
         case 'never-done':
           // Items without logs first, then by date desc
           if (!logA && !logB) return a.title.localeCompare(b.title);
-          if (!logA && logB) return -1; // A has no log, goes first
-          if (logA && !logB) return 1;  // B has no log, goes first
+          if (!logA) return -1; // A has no log, goes first
+          if (!logB) return 1;  // B has no log, goes first
           // Both have logs, sort by date desc
           return logB.date.localeCompare(logA.date);
 

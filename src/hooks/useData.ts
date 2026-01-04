@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Category, Item, LogEntry, UserPreferences, DEFAULT_PREFERENCES } from '../lib/types';
+import { Category, Item, LogEntry, UserPreferences, DEFAULT_PREFERENCES, ThemePreference } from '../lib/types';
 import { categoriesRepo } from '../lib/storage/categoriesRepo';
 import { itemsRepo } from '../lib/storage/itemsRepo';
 import { logsRepo } from '../lib/storage/logsRepo';

@@ -35,7 +35,7 @@ export function getDB() {
                 // Helper to check if store exists
                 const hasStore = (name: string) => {
                     try {
-                        return Array.from(db.objectStoreNames).includes(name);
+                        return db.objectStoreNames.contains(name as any);
                     } catch {
                         return false;
                     }
@@ -49,7 +49,7 @@ export function getDB() {
                         return;
                     }
                     try {
-                        const store = transaction.objectStore(storeName);
+                        const store = transaction.objectStore(storeName as any) as any;
                         if (store && !store.indexNames.contains(indexName)) {
                             store.createIndex(indexName, keyPath);
                         }
