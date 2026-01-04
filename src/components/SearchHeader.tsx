@@ -39,7 +39,7 @@ export function SearchHeader({
   const hasSearchText = localQuery.length > 0;
 
   return (
-    <div className="border-b border-gray-100 dark:border-gray-800 px-4 py-3">
+    <div className="border-b border-gray-100 dark:border-gray-800 px-4 py-2">
       <div className="flex items-center gap-3">
         {/* Search Input */}
         <div className="flex-1 relative">
@@ -54,7 +54,7 @@ export function SearchHeader({
               value={localQuery}
               onChange={handleInputChange}
               placeholder="Search"
-              className="w-full h-11 pl-10 pr-10 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all"
+              className="w-full h-11 pl-10 pr-10 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
             />
             {hasSearchText && (
               <button

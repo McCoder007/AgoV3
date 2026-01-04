@@ -60,7 +60,7 @@ export function ItemCard({ item, onDone, density }: ItemCardProps) {
     const isCompact = density === 'compact';
 
     return (
-        <Link href={`/items/${item.id}`} className={`block group relative overflow-hidden rounded-3xl bg-white dark:bg-gray-900/50 border transition-all active:scale-[0.98] ${isCompact ? 'px-4 py-4' : 'px-6 py-6'}`} style={{
+        <Link href={`/items/${item.id}`} className={`block group relative overflow-hidden rounded-3xl bg-white dark:bg-gray-900/50 border transition-all active:scale-[0.98] ${isCompact ? 'px-3 py-3' : 'px-4 py-4'}`} style={{
             borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.10)',
             boxShadow: isDarkMode ? 'none' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
         }}>
@@ -82,7 +82,7 @@ export function ItemCard({ item, onDone, density }: ItemCardProps) {
                             {categoryName}
                         </span>
                     </div>
-                    <h3 className={`font-bold text-gray-900 dark:text-gray-100 truncate leading-tight ${isCompact ? 'text-xl' : 'text-2xl'}`}>
+                    <h3 className={`font-bold text-gray-900 dark:text-gray-100 truncate leading-tight ${isCompact ? 'text-lg' : 'text-xl'}`}>
                         {item.title}
                     </h3>
                 </div>
@@ -95,7 +95,7 @@ export function ItemCard({ item, onDone, density }: ItemCardProps) {
                             <div className="w-8 h-[2px] bg-gray-200 dark:bg-gray-700 rounded-full" />
                         ) : (
                             <>
-                                <span className="font-semibold text-[32px] text-gray-900 dark:text-white leading-none">
+                                <span className="font-semibold text-2xl text-gray-900 dark:text-white leading-none">
                                     {daysSince}
                                 </span>
                                 <span className="text-[11px] font-medium text-gray-600/60 dark:text-gray-400/60 uppercase tracking-tight mt-1 leading-none">

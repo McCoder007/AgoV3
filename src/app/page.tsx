@@ -135,9 +135,9 @@ export default function Home() {
   return (
     <div className="flex flex-col h-full min-h-screen bg-white dark:bg-black">
       <div className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md">
-        <header className="border-b border-gray-100 dark:border-gray-800 px-5 py-4">
+        <header className="border-b border-gray-100 dark:border-gray-800 px-4 py-2">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Ago</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Ago</h1>
           </div>
         </header>
 
@@ -149,7 +149,7 @@ export default function Home() {
         />
       </div>
 
-      <div className="flex-1 px-4 py-4 space-y-3">
+      <div className="flex-1 px-3 py-2 space-y-2">
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-6">
             <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
