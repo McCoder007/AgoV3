@@ -134,7 +134,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-full min-h-screen bg-white dark:bg-black">
-      <div className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md">
+      <div className="sticky top-0 z-10 ago-sticky-header bg-white/80 dark:bg-black/80 backdrop-blur-md">
         <header className="border-b border-gray-100 dark:border-gray-800 px-4 py-2">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Ago</h1>

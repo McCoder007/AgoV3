@@ -32,3 +32,12 @@ body {
 @utility safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+/* Fix iOS Safari pulsing bug by disabling backdrop-blur on iOS */
+@supports (-webkit-touch-callout: none) {
+  .ago-sticky-header {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background-color: var(--background) !important;
+  }
+}
