@@ -1,0 +1,10 @@
+{
+    "name": "Ago",
+    "short_name": "Ago",
+    "description": "Track when you last did things",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#000000",
+    "icons": []
+}
