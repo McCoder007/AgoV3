@@ -64,8 +64,9 @@ export default function Home() {
   // Optimization: For < 100 items, we can just fetch all "last logs" in a bulk effect here.
 
   const [lastLogs, setLastLogs] = useState<Record<string, LogEntry | undefined>>({});
+  const [allLogs, setAllLogs] = useState<Record<string, LogEntry[]>>({});
 
-  // Effect to fetch all last logs when items change.
+  // Effect to fetch all logs when items change.
   // This is a bit "N+1" but local DB is fast.
   const [sortingReady, setSortingReady] = useState(false);
 
@@ -75,12 +76,17 @@ export default function Home() {
         setSortingReady(true);
         return;
       }
-      const logsMap: Record<string, LogEntry | undefined> = {};
+      const logsMap: Record<string, LogEntry[]> = {};
+      const lastLogsMap: Record<string, LogEntry | undefined> = {};
+      
       await Promise.all(items.map(async (item) => {
-        const log = await logsRepo.getLastLog(item.id);
-        logsMap[item.id] = log;
+        const logs = await logsRepo.listByItem(item.id);
+        logsMap[item.id] = logs;
+        lastLogsMap[item.id] = logs[0]; // logsRepo.listByItem returns sorted desc by date
       }));
-      setLastLogs(logsMap);
+      
+      setAllLogs(logsMap);
+      setLastLogs(lastLogsMap);
       setSortingReady(true);
     }
     fetchAllLogs();
@@ -91,7 +97,7 @@ export default function Home() {
 
     let filtered = items;
 
-    // Apply search filter (matches both title and category name)
+    // Apply search filter (matches title, category name, and log notes)
     if (debouncedSearchQuery.trim()) {
       const query = debouncedSearchQuery.toLowerCase().trim();
       filtered = filtered.filter(item => {
@@ -99,7 +105,14 @@ export default function Home() {
         const categoryName = category?.name || '';
         const titleMatch = item.title.toLowerCase().includes(query);
         const categoryMatch = categoryName.toLowerCase().includes(query);
-        return titleMatch || categoryMatch;
+        
+        // Search in log notes
+        const itemLogs = allLogs[item.id] || [];
+        const noteMatch = itemLogs.some(log => 
+          log.note?.toLowerCase().includes(query)
+        );
+
+        return titleMatch || categoryMatch || noteMatch;
       });
     }
 

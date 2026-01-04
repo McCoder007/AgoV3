@@ -7,6 +7,40 @@ import { itemsRepo } from '@/lib/storage/itemsRepo';
 import { useCategories } from '@/hooks/useData';
 import clsx from 'clsx';
 
+const DRAFT_STORAGE_KEY = 'ago-new-item-draft';
+
+interface ItemDraft {
+  title: string;
+  categoryId: string;
+}
+
+const saveDraft = (draft: ItemDraft) => {
+  try {
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+  } catch (e) {
+    console.error('Failed to save draft:', e);
+  }
+};
+
+const getDraft = (): ItemDraft | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
+    return saved ? JSON.parse(saved) : null;
+  } catch (e) {
+    console.error('Failed to load draft:', e);
+    return null;
+  }
+};
+
+const clearDraft = () => {
+  try {
+    localStorage.removeItem(DRAFT_STORAGE_KEY);
+  } catch (e) {
+    console.error('Failed to clear draft:', e);
+  }
+};
+
 interface NewItemSheetProps {
   isOpen: boolean;
   onClose: () => void;
@@ -32,8 +66,17 @@ export function NewItemSheet({
   useEffect(() => {
     if (isOpen) {
       setShouldRender(true);
-      setTitle('');
-      setCategoryId('');
+      
+      // Load draft if it exists
+      const draft = getDraft();
+      if (draft) {
+        setTitle(draft.title);
+        setCategoryId(draft.categoryId);
+      } else {
+        setTitle('');
+        setCategoryId('');
+      }
+      
       setDragY(0);
       // Small delay to trigger animation
       const timer = setTimeout(() => {
@@ -48,6 +91,22 @@ export function NewItemSheet({
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
+
+  // Save draft whenever title or categoryId changes (debounced)
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const timer = setTimeout(() => {
+      if (title.trim() || categoryId) {
+        saveDraft({ title, categoryId });
+      } else {
+        // If both are empty, clear the draft
+        clearDraft();
+      }
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [title, categoryId, isOpen]);
 
   // Focus management
   useEffect(() => {
@@ -92,6 +151,7 @@ export function NewItemSheet({
         title: title.trim(),
         categoryId: categoryId || '',
       });
+      clearDraft();
       onSave();
       onClose();
     } catch (error) {
@@ -169,7 +229,22 @@ export function NewItemSheet({
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pb-4 border-b border-gray-100 dark:border-gray-800">
-          <h2 id="new-item-title" className="text-xl font-bold text-gray-900 dark:text-white">New Item</h2>
+          <div className="flex items-baseline gap-3">
+            <h2 id="new-item-title" className="text-xl font-bold text-gray-900 dark:text-white">New Item</h2>
+            {(title || categoryId) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setTitle('');
+                  setCategoryId('');
+                  clearDraft();
+                }}
+                className="text-xs font-medium text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
+              >
+                Clear
+              </button>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="p-2 -mr-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
