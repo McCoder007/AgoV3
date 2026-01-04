@@ -103,10 +103,10 @@ export function ItemActionsSheet({
         ref={menuRef}
         className={clsx(
           "fixed z-50 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-lg",
-          "transition-all duration-200 ease-out flex flex-col min-w-[160px]",
+          "transition-opacity duration-150 ease-out flex flex-col min-w-[160px]",
           isOpen 
-            ? "opacity-100 translate-y-0 pointer-events-auto" 
-            : "opacity-0 -translate-y-2 pointer-events-none"
+            ? "opacity-100 pointer-events-auto" 
+            : "opacity-0 pointer-events-none"
         )}
         style={{
           top: `${position.top}px`,

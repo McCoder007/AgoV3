@@ -1,5 +1,5 @@
 import { LogEntry } from '@/lib/types';
-import { diffDaysDateOnly, formatInterval, parseDateOnly } from '@/lib/dateUtils';
+import { diffDaysDateOnly, formatInterval, parseDateOnly, getTodayDateString } from '@/lib/dateUtils';
 import { Trash2 } from 'lucide-react';
 import { logsRepo } from '@/lib/storage/logsRepo';
 
@@ -53,6 +53,7 @@ export function HistoryList({ logs, onLogUpdate, onLogClick }: HistoryListProps)
                 const formattedDate = parseDateOnly(log.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
                 const isFirst = index === 0;
                 const hasInterval = index < intervals.length;
+                const isToday = diffDaysDateOnly(getTodayDateString(), log.date) === 0;
 
                 return (
                     <div key={log.id}>
@@ -72,9 +73,9 @@ export function HistoryList({ logs, onLogUpdate, onLogClick }: HistoryListProps)
                             >
                                 <div className="flex-1 min-w-0">
                                     <p className="font-bold text-gray-900 dark:text-white text-base leading-5">
-                                        {isFirst ? 'Today' : formattedDate}
+                                        {isFirst && isToday ? 'Today' : formattedDate}
                                     </p>
-                                    {isFirst && (
+                                    {isFirst && isToday && (
                                         <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
                                             {formattedDate}
                                         </p>
