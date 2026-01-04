@@ -94,7 +94,7 @@ export default function ItemDetailPage() {
     if (!item) return <div className="p-10 text-center">Item not found</div>;
 
     return (
-        <div className="flex flex-col min-h-screen bg-white dark:bg-black">
+        <div className="flex flex-col min-h-[100dvh] bg-white dark:bg-black">
             {/* Page Header - minimal */}
             <header className="sticky top-0 z-30 bg-white/90 dark:bg-black/90 backdrop-blur-xl px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] flex items-center justify-between">
                 <Link href="/" className="p-2 -ml-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">

@@ -1,16 +1,17 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useItems, useCategories, usePreferences, useLastLog } from '@/hooks/useData';
 import { ItemCard } from '@/components/ItemCard';
 import { FilterSheet } from '@/components/FilterSheet';
 import { SortSheet, SortMethod } from '@/components/SortSheet';
 import { SettingsSheet } from '@/components/SettingsSheet';
+import { NewItemSheet } from '@/components/NewItemSheet';
 import { SearchHeader } from '@/components/SearchHeader';
 import { LogEntry } from '@/lib/types';
 import { logsRepo } from '@/lib/storage/logsRepo';
 import { useFilter } from '@/contexts/FilterContext';
-import { Plus } from 'lucide-react';
+import { Plus, Settings } from 'lucide-react';
 
 export default function Home() {
   const { items, loading: itemsLoading, reload: reloadItems } = useItems();
@@ -20,7 +21,22 @@ export default function Home() {
   const [sortMethod, setSortMethod] = useState<SortMethod>('recently-done');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
-  const { isFilterSheetOpen, isSortSheetOpen, isSettingsSheetOpen, openFilterSheet, closeFilterSheet, closeSortSheet, closeSettingsSheet } = useFilter();
+  const [scrollY, setScrollY] = useState(0);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const { 
+    isFilterSheetOpen, 
+    isSortSheetOpen, 
+    isSettingsSheetOpen, 
+    isNewItemSheetOpen,
+    openFilterSheet, 
+    openSortSheet, 
+    openSettingsSheet, 
+    openNewItemSheet,
+    closeFilterSheet, 
+    closeSortSheet, 
+    closeSettingsSheet,
+    closeNewItemSheet
+  } = useFilter();
 
   // Debounce search query with 250ms delay
   useEffect(() => {
@@ -30,6 +46,16 @@ export default function Home() {
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Track scroll position for header shadow
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // We need to sort items by "most recently done".
   // Since useItems only gives items, and ItemCard fetches its own log, we can't easily sort here without fetching logs.
@@ -88,32 +114,38 @@ export default function Home() {
 
       switch (sortMethod) {
         case 'recently-done':
-          // Sort by date desc (newest first)
-          if (logA && logB) return logB.date.localeCompare(logA.date);
-          if (logA && !logB) return -1; // A has log, goes first
-          if (!logA && logB) return 1;  // B has log, goes first
-          // Fallback to alphabetical
-          return a.title.localeCompare(b.title);
-
-        case 'oldest-first':
-          // Sort by date asc (oldest first)
-          if (logA && logB) return logA.date.localeCompare(logB.date);
-          if (logA && !logB) return 1; // A has log, goes after items without logs
-          if (!logA && logB) return -1; // B has log, goes after items without logs
-          // Fallback to alphabetical
-          return a.title.localeCompare(b.title);
-
-        case 'never-done':
-          // Items without logs first, then by date desc
-          if (!logA && !logB) return a.title.localeCompare(b.title);
-          if (!logA) return -1; // A has no log, goes first
-          if (!logB) return 1;  // B has no log, goes first
-          // Both have logs, sort by date desc
+          // Newest First: lastDone desc; Never Done items at bottom
+          if (!logA && !logB) return a.title.localeCompare(b.title); // Both never done, alphabetical
+          if (!logA) return 1;  // A never done, goes to bottom
+          if (!logB) return -1; // B never done, goes to bottom
+          // Both have logs, sort by date desc (newest first)
           return logB.date.localeCompare(logA.date);
 
+        case 'oldest-first':
+          // Oldest First: lastDone asc; Never Done items at bottom
+          if (!logA && !logB) return a.title.localeCompare(b.title); // Both never done, alphabetical
+          if (!logA) return 1;  // A never done, goes to bottom
+          if (!logB) return -1; // B never done, goes to bottom
+          // Both have logs, sort by date asc (oldest first)
+          return logA.date.localeCompare(logB.date);
+
         case 'alphabetical':
-          // Sort alphabetically by title
-          return a.title.localeCompare(b.title);
+          // Alphabetical: title asc; secondary stable sort by lastDone desc
+          const titleCompare = a.title.localeCompare(b.title);
+          if (titleCompare !== 0) return titleCompare;
+          // Titles are equal, secondary sort by lastDone desc
+          if (!logA && !logB) return 0;
+          if (!logA) return 1;
+          if (!logB) return -1;
+          return logB.date.localeCompare(logA.date);
+
+        case 'never-done':
+          // Never Done: Never Done items first; then lastDone desc
+          if (!logA && !logB) return a.title.localeCompare(b.title); // Both never done, alphabetical
+          if (!logA) return -1; // A never done, goes first
+          if (!logB) return 1;  // B never done, goes first
+          // Both have logs, sort by date desc
+          return logB.date.localeCompare(logA.date);
 
         default:
           return a.title.localeCompare(b.title);
@@ -131,25 +163,48 @@ export default function Home() {
 
   // Calculate active filter count
   const filterActiveCount = selectedCategory ? 1 : 0;
+  const sortActive = sortMethod !== 'recently-done';
 
   return (
-    <div className="flex flex-col h-full min-h-screen bg-white dark:bg-black">
-      <div className="sticky top-0 z-10 ago-sticky-header bg-white/80 dark:bg-black/80 backdrop-blur-md">
-        <header className="border-b border-gray-100 dark:border-gray-800 px-4 py-2">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Ago</h1>
-          </div>
-        </header>
+    <div className="flex flex-col h-full min-h-[100dvh] bg-white dark:bg-black">
+      {/* Fixed Header */}
+      <div 
+        ref={headerRef}
+        className={`sticky top-0 z-30 ago-sticky-header bg-white dark:bg-black transition-shadow ${
+          scrollY > 0 ? 'shadow-sm border-b border-gray-100 dark:border-gray-800' : ''
+        }`}
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      >
+        {/* Row 1: Title + Settings */}
+        <div className="px-4 py-3 flex items-center justify-between">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Ago</h1>
+          <button
+            onClick={openSettingsSheet}
+            className="h-11 w-11 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            aria-label="Settings"
+          >
+            <Settings size={20} />
+          </button>
+        </div>
 
-        <SearchHeader
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onFilterClick={openFilterSheet}
-          filterActiveCount={filterActiveCount}
-        />
+        {/* Row 2: Search + Filter + Sort */}
+        <div className="px-4 pb-3 border-b border-gray-100 dark:border-gray-800">
+          <SearchHeader
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onFilterClick={openFilterSheet}
+            filterActiveCount={filterActiveCount}
+            onSortClick={openSortSheet}
+            sortActive={sortActive}
+          />
+        </div>
       </div>
 
-      <div className="flex-1 px-3 py-2 space-y-2">
+      {/* Content Area - with padding for header and FAB */}
+      <div className="flex-1 px-3 py-2 space-y-2" style={{ 
+        paddingTop: 'calc(0.5rem + env(safe-area-inset-top, 0px))',
+        paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))'
+      }}>
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-6">
             <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
@@ -189,6 +244,19 @@ export default function Home() {
         )}
       </div>
 
+      {/* Floating Action Button */}
+      <button
+        onClick={openNewItemSheet}
+        className="fixed z-20 flex items-center justify-center w-14 h-14 rounded-full bg-black dark:bg-white text-white dark:text-black shadow-lg hover:shadow-xl transition-all active:scale-95"
+        style={{
+          bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
+          right: '16px',
+        }}
+        aria-label="Add task"
+      >
+        <Plus size={24} strokeWidth={2.5} />
+      </button>
+
       <FilterSheet
         isOpen={isFilterSheetOpen}
         onClose={closeFilterSheet}
@@ -205,6 +273,11 @@ export default function Home() {
       <SettingsSheet
         isOpen={isSettingsSheetOpen}
         onClose={closeSettingsSheet}
+      />
+      <NewItemSheet
+        isOpen={isNewItemSheetOpen}
+        onClose={closeNewItemSheet}
+        onSave={reloadItems}
       />
     </div>
   );

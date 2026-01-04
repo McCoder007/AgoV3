@@ -1,9 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClientInit } from "@/components/ClientInit";
 import { FilterProvider } from "@/contexts/FilterContext";
-import { BottomNavigation } from "@/components/BottomNavigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,6 +18,12 @@ export const metadata: Metadata = {
   title: "Ago",
   description: "Track when you last did things",
   manifest: "/manifest.json",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -53,10 +58,9 @@ export default function RootLayout({
       >
         <ClientInit />
         <FilterProvider>
-          <main className="max-w-md mx-auto min-h-screen bg-white dark:bg-black shadow-2xl relative overflow-hidden flex flex-col pb-20">
+          <main className="max-w-md mx-auto min-h-[100dvh] bg-white dark:bg-black shadow-2xl relative overflow-hidden flex flex-col">
             {children}
           </main>
-          <BottomNavigation />
         </FilterProvider>
       </body>
     </html>

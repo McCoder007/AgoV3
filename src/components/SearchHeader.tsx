@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, X, SlidersHorizontal } from 'lucide-react';
+import { Search, X, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
 interface SearchHeaderProps {
@@ -8,6 +8,8 @@ interface SearchHeaderProps {
   onSearchChange: (query: string) => void;
   onFilterClick: () => void;
   filterActiveCount: number;
+  onSortClick: () => void;
+  sortActive: boolean;
 }
 
 export function SearchHeader({
@@ -15,6 +17,8 @@ export function SearchHeader({
   onSearchChange,
   onFilterClick,
   filterActiveCount,
+  onSortClick,
+  sortActive,
 }: SearchHeaderProps) {
   const [localQuery, setLocalQuery] = useState(searchQuery);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -39,7 +43,7 @@ export function SearchHeader({
   const hasSearchText = localQuery.length > 0;
 
   return (
-    <div className="border-b border-gray-100 dark:border-gray-800 px-4 py-2">
+    <div className="py-2">
       <div className="flex items-center gap-3">
         {/* Search Input */}
         <div className="flex-1 relative">
@@ -71,7 +75,7 @@ export function SearchHeader({
         {/* Filter Button */}
         <button
           onClick={onFilterClick}
-          className="relative h-11 w-11 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+          className="relative h-11 w-11 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
           aria-label="Filter"
         >
           <SlidersHorizontal size={20} />
@@ -79,6 +83,18 @@ export function SearchHeader({
             <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1.5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center">
               {filterActiveCount}
             </span>
+          )}
+        </button>
+
+        {/* Sort Button */}
+        <button
+          onClick={onSortClick}
+          className="relative h-11 w-11 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          aria-label="Sort"
+        >
+          <ArrowUpDown size={20} />
+          {sortActive && (
+            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600"></span>
           )}
         </button>
       </div>

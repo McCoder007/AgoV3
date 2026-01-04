@@ -6,12 +6,15 @@ interface FilterContextType {
   isFilterSheetOpen: boolean;
   isSortSheetOpen: boolean;
   isSettingsSheetOpen: boolean;
+  isNewItemSheetOpen: boolean;
   openFilterSheet: () => void;
   openSortSheet: () => void;
   openSettingsSheet: () => void;
+  openNewItemSheet: () => void;
   closeFilterSheet: () => void;
   closeSortSheet: () => void;
   closeSettingsSheet: () => void;
+  closeNewItemSheet: () => void;
 }
 
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
@@ -20,6 +23,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [isSortSheetOpen, setIsSortSheetOpen] = useState(false);
   const [isSettingsSheetOpen, setIsSettingsSheetOpen] = useState(false);
+  const [isNewItemSheetOpen, setIsNewItemSheetOpen] = useState(false);
 
   return (
     <FilterContext.Provider
@@ -27,20 +31,30 @@ export function FilterProvider({ children }: { children: ReactNode }) {
         isFilterSheetOpen,
         isSortSheetOpen,
         isSettingsSheetOpen,
+        isNewItemSheetOpen,
         openFilterSheet: () => {
           setIsSortSheetOpen(false);
           setIsSettingsSheetOpen(false);
-          setIsFilterSheetOpen(true);
+          setIsNewItemSheetOpen(false);
+          setIsFilterSheetOpen(prev => !prev); // Toggle
         },
         openSortSheet: () => {
           setIsFilterSheetOpen(false);
           setIsSettingsSheetOpen(false);
-          setIsSortSheetOpen(true);
+          setIsNewItemSheetOpen(false);
+          setIsSortSheetOpen(prev => !prev); // Toggle
         },
         openSettingsSheet: () => {
           setIsFilterSheetOpen(false);
           setIsSortSheetOpen(false);
+          setIsNewItemSheetOpen(false);
           setIsSettingsSheetOpen(true);
+        },
+        openNewItemSheet: () => {
+          setIsFilterSheetOpen(false);
+          setIsSortSheetOpen(false);
+          setIsSettingsSheetOpen(false);
+          setIsNewItemSheetOpen(true);
         },
         closeFilterSheet: () => {
           setIsFilterSheetOpen(false);
@@ -50,6 +64,9 @@ export function FilterProvider({ children }: { children: ReactNode }) {
         },
         closeSettingsSheet: () => {
           setIsSettingsSheetOpen(false);
+        },
+        closeNewItemSheet: () => {
+          setIsNewItemSheetOpen(false);
         },
       }}
     >

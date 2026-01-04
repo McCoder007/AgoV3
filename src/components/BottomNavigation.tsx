@@ -8,10 +8,18 @@ import { useFilter } from '@/contexts/FilterContext';
 
 export function BottomNavigation() {
   const pathname = usePathname();
-  const { openFilterSheet, openSortSheet, openSettingsSheet, isFilterSheetOpen, isSortSheetOpen, isSettingsSheetOpen } = useFilter();
+  const { 
+    openFilterSheet, 
+    openSortSheet, 
+    openSettingsSheet, 
+    openNewItemSheet,
+    isFilterSheetOpen, 
+    isSortSheetOpen, 
+    isSettingsSheetOpen,
+    isNewItemSheetOpen
+  } = useFilter();
 
   const isHome = pathname === '/';
-  const isAdd = pathname === '/add';
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 safe-bottom">
@@ -47,18 +55,18 @@ export function BottomNavigation() {
 
           {/* Add Button - Centered and Elevated */}
           <div className="relative -mt-8 mx-1">
-            <Link
-              href="/add"
+            <button
+              onClick={openNewItemSheet}
               className={clsx(
                 'flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all',
                 'bg-white dark:bg-black text-black dark:text-white',
                 'hover:scale-105 active:scale-95',
                 'border-2 border-gray-200 dark:border-gray-800',
-                isAdd && 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900'
+                isNewItemSheetOpen && 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900'
               )}
             >
               <Plus size={28} strokeWidth={2.5} />
-            </Link>
+            </button>
           </div>
 
           {/* Sort Button */}
