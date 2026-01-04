@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { LogEntry } from '@/lib/types';
 import { parseDateOnly } from '@/lib/dateUtils';
-import { X, Calendar, Save } from 'lucide-react';
+import { X, Calendar } from 'lucide-react';
 
 interface EditLogModalProps {
     isOpen: boolean;
@@ -63,7 +63,7 @@ export function EditLogModal({ isOpen, onClose, log, onSave }: EditLogModalProps
                 <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
                     {/* Header */}
                     <div className="flex items-center justify-between p-5 pb-4">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Edit Log</h2>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Edit</h2>
                         <button
                             onClick={onClose}
                             className="p-2 -mr-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
@@ -79,7 +79,7 @@ export function EditLogModal({ isOpen, onClose, log, onSave }: EditLogModalProps
                             <label className="block text-sm font-semibold text-gray-900 dark:text-white">
                                 Date
                             </label>
-                            <div className="relative">
+                            <div className="relative min-w-0">
                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                                     <Calendar size={18} />
                                 </div>
@@ -87,7 +87,7 @@ export function EditLogModal({ isOpen, onClose, log, onSave }: EditLogModalProps
                                     type="date"
                                     value={date}
                                     onChange={e => setDate(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-base focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                                    className="w-full min-w-0 pl-12 pr-4 py-3.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-base focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
                                 />
                             </div>
                         </div>
@@ -117,10 +117,9 @@ export function EditLogModal({ isOpen, onClose, log, onSave }: EditLogModalProps
                             <button
                                 onClick={handleSave}
                                 disabled={saving}
-                                className="flex-1 py-3.5 rounded-full bg-gray-900 dark:bg-white text-white dark:text-black font-semibold text-base hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                className="flex-1 py-3.5 rounded-full bg-gray-900 dark:bg-white text-white dark:text-black font-semibold text-base hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors flex items-center justify-center disabled:opacity-50"
                             >
-                                <Save size={18} />
-                                Save Log
+                                Save
                             </button>
                         </div>
                     </div>
