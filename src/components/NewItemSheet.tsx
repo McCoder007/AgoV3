@@ -367,6 +367,13 @@ export function NewItemSheet({
                   }}
                   onBlur={handleDateBlur}
                   onFocus={scrollToDate}
+                  onClick={() => {
+                    try {
+                      (nativeDateRef.current as any)?.showPicker();
+                    } catch (e) {
+                      nativeDateRef.current?.focus();
+                    }
+                  }}
                   placeholder="mm/dd/yyyy"
                   className={clsx(
                     "w-full pl-4 pr-12 py-3.5 text-lg rounded-xl border bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 outline-none transition-all",
@@ -376,21 +383,16 @@ export function NewItemSheet({
                   )}
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                  {lastDoneInput && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setLastDoneInput('');
-                        setLastDoneError('');
-                      }}
-                      className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 relative z-20"
-                    >
-                      <X size={20} />
-                    </button>
-                  )}
                   <div className="relative">
                     <button
                       type="button"
+                      onClick={() => {
+                        try {
+                          (nativeDateRef.current as any)?.showPicker();
+                        } catch (e) {
+                          nativeDateRef.current?.focus();
+                        }
+                      }}
                       className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 min-w-[44px] min-h-[44px] flex items-center justify-center"
                     >
                       <CalendarIcon size={24} />
