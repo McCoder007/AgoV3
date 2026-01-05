@@ -44,8 +44,6 @@ export const DEFAULT_CATEGORIES = [
   'Finance',
   'People',
   'Personal',
-  'Work',
-  'Life Admin',
 ];
 
 // Default color palette for categories (12 accessible colors)

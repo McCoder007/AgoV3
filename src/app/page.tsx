@@ -70,9 +70,11 @@ export default function Home() {
   // This is a bit "N+1" but local DB is fast.
   const [sortingReady, setSortingReady] = useState(false);
 
-  useMemo(() => {
+  useEffect(() => {
     async function fetchAllLogs() {
       if (items.length === 0) {
+        setAllLogs({});
+        setLastLogs({});
         setSortingReady(true);
         return;
       }
