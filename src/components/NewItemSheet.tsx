@@ -383,26 +383,27 @@ export function NewItemSheet({
                         setLastDoneInput('');
                         setLastDoneError('');
                       }}
-                      className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                      className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 relative z-20"
                     >
                       <X size={20} />
                     </button>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => nativeDateRef.current?.showPicker()}
-                    className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 min-w-[44px] min-h-[44px] flex items-center justify-center"
-                  >
-                    <CalendarIcon size={24} />
-                  </button>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                    >
+                      <CalendarIcon size={24} />
+                    </button>
+                    <input
+                      ref={nativeDateRef}
+                      type="date"
+                      className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
+                      onChange={handleNativeDateChange}
+                      max={format(new Date(), 'yyyy-MM-dd')}
+                    />
+                  </div>
                 </div>
-                <input
-                  ref={nativeDateRef}
-                  type="date"
-                  className="sr-only"
-                  onChange={handleNativeDateChange}
-                  max={format(new Date(), 'yyyy-MM-dd')}
-                />
               </div>
               {lastDoneError && (
                 <p className="text-sm font-medium text-red-500 ml-1">{lastDoneError}</p>
