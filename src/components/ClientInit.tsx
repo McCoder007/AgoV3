@@ -11,6 +11,20 @@ export function ClientInit() {
         let handleChange: (() => void) | null = null;
         
         const init = async () => {
+            // Register Service Worker
+            if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js').then(
+                        (registration) => {
+                            console.log('SW registered: ', registration);
+                        },
+                        (registrationError) => {
+                            console.log('SW registration failed: ', registrationError);
+                        }
+                    );
+                });
+            }
+
             // Start seeding in background
             const seedPromise = seedDefaults();
             
