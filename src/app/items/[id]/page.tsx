@@ -195,7 +195,7 @@ export default function ItemDetailPage() {
 
                 {/* History Section */}
                 <section className="space-y-4">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-[9px] -ml-[3px]">
                         <Clock size={18} className="text-gray-400 dark:text-gray-500" />
                         <h3 className="text-base font-bold text-gray-900 dark:text-white">
                             History
