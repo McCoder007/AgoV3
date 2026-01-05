@@ -43,9 +43,12 @@ export const DEFAULT_CATEGORIES = [
   'Tech',
   'Finance',
   'People',
+  'Personal',
+  'Work',
+  'Life Admin',
 ];
 
-// Default color palette for categories (8 accessible colors)
+// Default color palette for categories (12 accessible colors)
 export const DEFAULT_CATEGORY_COLORS = [
   '#3B82F6', // Blue
   '#10B981', // Emerald
@@ -55,4 +58,8 @@ export const DEFAULT_CATEGORY_COLORS = [
   '#06B6D4', // Cyan
   '#F97316', // Orange
   '#D946EF', // Fuchsia
+  '#22C55E', // Green
+  '#14B8A6', // Teal
+  '#6366F1', // Indigo
+  '#EC4899', // Pink
 ];
