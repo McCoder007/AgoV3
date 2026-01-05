@@ -22,7 +22,7 @@ export function BottomNavigation() {
   const isHome = pathname === '/';
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 safe-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-background border-t border-gray-200 dark:border-gray-800 safe-bottom">
       <div className="max-w-md mx-auto relative">
         <div className="flex items-center px-2 py-2 h-16">
           {/* Home Button */}
@@ -59,7 +59,7 @@ export function BottomNavigation() {
               onClick={openNewItemSheet}
               className={clsx(
                 'flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all',
-                'bg-white dark:bg-black text-black dark:text-white',
+                'bg-white dark:bg-background text-black dark:text-white',
                 'hover:scale-105 active:scale-95',
                 'border-2 border-gray-200 dark:border-gray-800',
                 isNewItemSheetOpen && 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900'

@@ -65,14 +65,14 @@ export default function EditItemPage() {
     };
 
     if (loading) return (
-        <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black text-gray-400">
+        <div className="flex items-center justify-center min-h-screen bg-white dark:bg-background text-gray-400">
             <div className="animate-pulse">Loading...</div>
         </div>
     );
 
     return (
-        <div className="flex flex-col min-h-screen bg-white dark:bg-black">
-            <header className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 px-4 py-4 flex items-center justify-between">
+        <div className="flex flex-col min-h-screen bg-white dark:bg-background">
+            <header className="sticky top-0 z-10 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 px-4 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <button onClick={() => router.back()} className="p-2 -ml-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
                         <ChevronLeft />

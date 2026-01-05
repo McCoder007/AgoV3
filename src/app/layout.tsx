@@ -34,7 +34,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+    { media: "(prefers-color-scheme: dark)", color: "#121212" },
   ],
 };
 
@@ -66,11 +66,11 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 text-gray-900 dark:bg-background dark:text-gray-100`}
       >
         <ClientInit />
         <FilterProvider>
-          <main className="max-w-md mx-auto min-h-[100dvh] bg-white dark:bg-black shadow-2xl relative overflow-hidden flex flex-col">
+          <main className="max-w-md mx-auto min-h-[100dvh] bg-white dark:bg-background shadow-2xl relative overflow-hidden flex flex-col">
             {children}
           </main>
         </FilterProvider>

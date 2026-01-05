@@ -170,7 +170,7 @@ export default function Home() {
 
   if (itemsLoading || catsLoading || !sortingReady) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black text-gray-500">
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-background text-gray-500">
         <div className="animate-pulse">Loading...</div>
       </div>
     );
@@ -181,11 +181,11 @@ export default function Home() {
   const sortActive = sortMethod !== 'recently-done';
 
   return (
-    <div className="flex flex-col h-full min-h-[100dvh] bg-white dark:bg-black">
+    <div className="flex flex-col h-full min-h-[100dvh] bg-white dark:bg-background">
       {/* Fixed Header */}
       <div 
         ref={headerRef}
-        className={`sticky top-0 z-30 ago-sticky-header bg-white dark:bg-black transition-shadow ${
+        className={`sticky top-0 z-30 ago-sticky-header bg-white dark:bg-background transition-shadow ${
           scrollY > 0 ? 'shadow-sm border-b border-gray-100 dark:border-gray-800' : ''
         }`}
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
@@ -217,7 +217,7 @@ export default function Home() {
 
       {/* Content Area - with padding for header and FAB */}
       <div className="flex-1 px-3 py-2 space-y-2" style={{ 
-        paddingTop: 'calc(0.5rem + env(safe-area-inset-top, 0px))',
+        paddingTop: '0.5rem',
         paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))'
       }}>
         {items.length === 0 ? (
