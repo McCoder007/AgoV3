@@ -70,7 +70,7 @@ export default function RootLayout({
       >
         <ClientInit />
         <FilterProvider>
-          <main className="max-w-md mx-auto min-h-[100dvh] bg-white dark:bg-background shadow-2xl relative flex flex-col">
+          <main className="max-w-md mx-auto h-[100dvh] bg-white dark:bg-background shadow-2xl relative overflow-hidden flex flex-col">
             {children}
           </main>
         </FilterProvider>

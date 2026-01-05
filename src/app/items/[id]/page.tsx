@@ -94,15 +94,15 @@ export default function ItemDetailPage() {
     if (!item) return <div className="p-10 text-center">Item not found</div>;
 
     return (
-        <div className="flex flex-col min-h-[100dvh] bg-white dark:bg-background">
+        <div className="flex flex-col h-full overflow-hidden bg-white dark:bg-background">
             {/* Page Header - minimal */}
-            <header className="sticky top-0 z-30 bg-white/90 dark:bg-background/90 backdrop-blur-xl px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] flex items-center justify-between">
+            <header className="flex-none z-30 bg-white/90 dark:bg-background/90 backdrop-blur-xl px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] flex items-center justify-between">
                 <Link href="/" className="p-2 -ml-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                     <ChevronLeft size={24} />
                 </Link>
             </header>
 
-            <main className="flex-1 px-5 py-4 pb-24 space-y-8">
+            <main className="flex-1 px-5 py-4 pb-24 space-y-8 overflow-y-auto">
                 {/* Hero Section - Title, Category Chip */}
                 <section className="space-y-2">
                     <div className="flex items-start justify-between gap-4">
