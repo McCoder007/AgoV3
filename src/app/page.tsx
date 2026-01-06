@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
-import { usePreferences, useLastLog } from '@/hooks/useData';
+import { usePreferences } from '@/hooks/useData';
 import { useDataContext } from '@/contexts/DataContext';
 import { ItemCard } from '@/components/ItemCard';
 import { FilterSheet } from '@/components/FilterSheet';
@@ -10,12 +10,11 @@ import { SettingsSheet } from '@/components/SettingsSheet';
 import { NewItemSheet } from '@/components/NewItemSheet';
 import { SearchHeader } from '@/components/SearchHeader';
 import { LogEntry } from '@/lib/types';
-import { logsRepo } from '@/lib/storage/logsRepo';
 import { useFilter } from '@/contexts/FilterContext';
 import { Plus, Settings } from 'lucide-react';
 
 export default function Home() {
-  const { items, itemsLoading, reloadItems, categories, categoriesLoading: catsLoading, reloadCategories } = useDataContext();
+  const { items, itemsLoading, reloadItems, categories, categoriesLoading: catsLoading, reloadCategories, allLogs, logsLoading, reloadLogsForItem } = useDataContext();
   const { prefs } = usePreferences();
 
   // Initialize state from sessionStorage if available
@@ -119,13 +118,15 @@ export default function Home() {
   }, []);
 
   // We need to sort items by "most recently done".
-  // Since useItems only gives items, and ItemCard fetches its own log, we can't easily sort here without fetching logs.
-  // Ideally, we should fetch all latest logs here to sort.
-  // Strategy: Fetch all latest logs on mount/update? 
-  // Optimization: For < 100 items, we can just fetch all "last logs" in a bulk effect here.
+  // Logs are now cached in DataContext - derive lastLogs from allLogs
+  const lastLogs = useMemo(() => {
+    const result: Record<string, LogEntry | undefined> = {};
+    for (const [itemId, logs] of Object.entries(allLogs)) {
+      result[itemId] = logs[0]; // logs are sorted desc by date
+    }
+    return result;
+  }, [allLogs]);
 
-  const [lastLogs, setLastLogs] = useState<Record<string, LogEntry | undefined>>({});
-  const [allLogs, setAllLogs] = useState<Record<string, LogEntry[]>>({});
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
 
   // Check for last viewed item on mount
@@ -146,33 +147,8 @@ export default function Home() {
     }
   }, []);
 
-  // Effect to fetch all logs when items change.
-  // This is a bit "N+1" but local DB is fast.
-  const [sortingReady, setSortingReady] = useState(false);
-
-  useEffect(() => {
-    async function fetchAllLogs() {
-      if (items.length === 0) {
-        setAllLogs({});
-        setLastLogs({});
-        setSortingReady(true);
-        return;
-      }
-      const logsMap: Record<string, LogEntry[]> = {};
-      const lastLogsMap: Record<string, LogEntry | undefined> = {};
-
-      await Promise.all(items.map(async (item) => {
-        const logs = await logsRepo.listByItem(item.id);
-        logsMap[item.id] = logs;
-        lastLogsMap[item.id] = logs[0]; // logsRepo.listByItem returns sorted desc by date
-      }));
-
-      setAllLogs(logsMap);
-      setLastLogs(lastLogsMap);
-      setSortingReady(true);
-    }
-    fetchAllLogs();
-  }, [items]);
+  // Sorting is ready once logs are loaded
+  const sortingReady = !logsLoading;
 
   // Restore scroll position immediately using layoutEffect (before paint)
   useLayoutEffect(() => {
@@ -398,19 +374,12 @@ export default function Home() {
         isOpen={isNewItemSheetOpen}
         onClose={closeNewItemSheet}
         onSave={(newItemId, logEntry) => {
-          // Immediately update lastLogs if a log was created, so the item is sorted correctly from the start
-          if (logEntry) {
-            setLastLogs(prev => ({
-              ...prev,
-              [newItemId]: logEntry,
-            }));
-            // Also update allLogs for consistency
-            setAllLogs(prev => ({
-              ...prev,
-              [newItemId]: [logEntry],
-            }));
-          }
+          // Reload items to include the new item, then reload its logs
           reloadItems();
+          if (logEntry) {
+            // Reload logs for the new item so it appears sorted correctly
+            reloadLogsForItem(newItemId);
+          }
           // Highlight the newly created item
           setHighlightedItemId(newItemId);
           setTimeout(() => {

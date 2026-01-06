@@ -58,6 +58,9 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Eliminate 300ms tap delay on iOS */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 @utility safe-top {

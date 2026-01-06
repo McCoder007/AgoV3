@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { useItemLogs } from '@/hooks/useData';
 import { useDataContext } from '@/contexts/DataContext';
 import { HistoryList } from '@/components/HistoryList';
 
@@ -26,8 +25,10 @@ import { useMemo } from 'react';
 
 export default function ItemDetailPage() {
     const { id } = useParams<{ id: string }>();
-    const { items, itemsLoading, reloadItems, categories, reloadCategories } = useDataContext();
-    const { logs, reload: reloadLogs } = useItemLogs(id);
+    const { items, itemsLoading, reloadItems, categories, reloadCategories, getLogsForItem, reloadLogsForItem } = useDataContext();
+
+    // Use cached logs from context (instant!)
+    const logs = getLogsForItem(id);
 
     const [editingLog, setEditingLog] = useState<LogEntry | null>(null);
     const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
@@ -38,15 +39,15 @@ export default function ItemDetailPage() {
         const checkDarkMode = () => {
             setIsDarkMode(document.documentElement.classList.contains('dark'));
         };
-        
+
         checkDarkMode();
-        
+
         const observer = new MutationObserver(checkDarkMode);
         observer.observe(document.documentElement, {
             attributes: true,
             attributeFilter: ['class'],
         });
-        
+
         return () => observer.disconnect();
     }, []);
 
@@ -61,17 +62,17 @@ export default function ItemDetailPage() {
     const stats = useMemo(() => {
         if (logs.length === 0) return { average: 0, total: 0, shortest: 0 };
         if (logs.length === 1) return { average: 0, total: 1, shortest: 0 };
-        
+
         const gaps: number[] = [];
         for (let i = 0; i < logs.length - 1; i++) {
             // logs are sorted desc, so logs[i] is newer than logs[i+1]
             gaps.push(diffDaysDateOnly(logs[i].date, logs[i + 1].date));
         }
-        
+
         const totalGap = gaps.reduce((sum, gap) => sum + gap, 0);
         const average = Math.round(totalGap / gaps.length);
         const shortest = Math.min(...gaps);
-        
+
         return { average, total: logs.length, shortest };
     }, [logs]);
 
@@ -82,13 +83,13 @@ export default function ItemDetailPage() {
     const handleSaveLog = async (date: string, note?: string) => {
         if (!editingLog) return;
         await logsRepo.update(editingLog.id, { date, note });
-        reloadLogs();
+        reloadLogsForItem(id);
     };
 
     const handleDone = async () => {
         if (!item) return;
         await logsRepo.add(item.id, getTodayDateString());
-        reloadLogs();
+        reloadLogsForItem(id);
     };
 
     // Format creation date
@@ -114,7 +115,7 @@ export default function ItemDetailPage() {
     // Format stat value (Average/Shortest)
     const formatStatValue = (value: number) => {
         if (value === 0) return '-';
-        
+
         return (
             <>
                 {value}<span className="text-xs ml-1 opacity-70">{value === 1 ? 'day' : 'days'}</span>
@@ -152,7 +153,7 @@ export default function ItemDetailPage() {
                                 {item.title}
                             </h1>
                             {category && (
-                                <span 
+                                <span
                                     className="inline-block px-[14px] py-1.5 rounded-full text-[13px] font-semibold uppercase tracking-wider"
                                     style={categoryStyles ? {
                                         color: categoryStyles.color,
@@ -232,7 +233,7 @@ export default function ItemDetailPage() {
                                 <p className="text-xs text-text-tertiary mt-1">Record your first entry above</p>
                             </div>
                         ) : (
-                            <HistoryList logs={logs} onLogUpdate={reloadLogs} onLogClick={handleLogClick} />
+                            <HistoryList logs={logs} onLogUpdate={() => reloadLogsForItem(id)} onLogClick={handleLogClick} />
                         )}
                     </div>
                 </section>
