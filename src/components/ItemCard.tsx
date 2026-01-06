@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Item } from '@/lib/types';
 import { useLastLog, useCategories } from '@/hooks/useData';
 import { diffDaysDateOnly, getTodayDateString, formatDisplayDate } from '@/lib/dateUtils';
-import { getCategoryStyles } from '@/lib/colorUtils';
+import { getCategoryStyles, getSwipeGradient } from '@/lib/colorUtils';
 import { Check, Undo2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { logsRepo } from '@/lib/storage/logsRepo';
@@ -24,14 +24,6 @@ interface Particle {
     vy: number;
     color: string;
 }
-
-const CATEGORY_GRADIENTS: Record<string, string> = {
-    'Personal': 'linear-gradient(90deg, #8B5CF6, #F3F0FF)',
-    'Health': 'linear-gradient(90deg, #EF4444, #FEF2F2)',
-    'Fitness': 'linear-gradient(90deg, #F59E0B, #FEF3C7)',
-    'Car': 'linear-gradient(90deg, #3B82F6, #EFF6FF)',
-    'Home': 'linear-gradient(90deg, #10B981, #ECFDF5)',
-};
 
 // Trivial change to trigger HMR rebuild
 export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps) {
@@ -99,7 +91,7 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
     const category = categories.find(c => c.id === item.categoryId);
     const categoryName = category?.name || 'Uncategorized';
     const categoryStyles = category?.color ? getCategoryStyles(category.color, isDarkMode) : null;
-    const swipeGradient = CATEGORY_GRADIENTS[categoryName] || 'linear-gradient(90deg, #6B7280, #F3F4F6)';
+    const swipeGradient = getSwipeGradient(category?.color);
 
     const triggerCompletion = useCallback(async () => {
         if (isCompleting) return;
@@ -359,28 +351,21 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
             <div
                 ref={cardRef}
                 onClick={handleCardClick}
-                className={`block group relative overflow-hidden rounded-3xl border transition-all ${!isDragging ? 'duration-300' : 'transition-none'} ${isCompact ? 'px-3 py-3' : 'px-4 py-4'} cursor-grab active:cursor-grabbing ${showHighlight ? 'z-10' : 'z-0'}`}
+                className={`block group relative overflow-hidden rounded-3xl border ${isCompact ? 'px-3 py-3' : 'px-4 py-4'} cursor-grab active:cursor-grabbing`}
                 style={{
-                    backgroundColor: showHighlight
-                        ? (isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)')
-                        : (isDarkMode ? 'rgba(17, 24, 39, 0.5)' : '#ffffff'),
-                    borderColor: showHighlight
-                        ? (category?.color || '#3B82F6') + '40'
-                        : (isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.10)'),
-                    boxShadow: showHighlight
-                        ? '0 10px 20px -5px rgba(0, 0, 0, 0.1)'
-                        : (isDarkMode ? 'none' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'),
+                    backgroundColor: (isDarkMode ? '#111827' : '#ffffff'),
+                    borderColor: (isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.10)'),
+                    boxShadow: (isDarkMode ? 'none' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'),
                     transform: isCompleting
                         ? (offsetX < 0 ? 'translate3d(-110%, 0, 0)' : 'translate3d(110%, 0, 0)')
                         : `translate3d(${offsetX + (isHighlighted && !showHighlight ? -20 : 0)}px, 0, 0)`,
-                    transitionProperty: 'all',
+                    transitionProperty: 'transform, opacity',
                     transitionDuration: isDragging ? '0ms' : '400ms',
-                    transitionTimingFunction: showHighlight
-                        ? 'cubic-bezier(0.34, 1.56, 0.64, 1)'
-                        : (!isDragging && !isCompleting ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'cubic-bezier(0.4, 0, 0.2, 1)'),
+                    transitionTimingFunction: (!isDragging && !isCompleting) ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'cubic-bezier(0.4, 0, 0.2, 1)',
                     opacity: (isHighlighted && !showHighlight) ? 0 : (isToday ? 0.7 : 1),
+                    zIndex: showHighlight ? 10 : 0,
                     touchAction: 'pan-y',
-                    willChange: 'transform, background-color, border-color, box-shadow',
+                    willChange: 'transform, opacity',
                     WebkitUserSelect: 'none',
                     userSelect: 'none',
                     WebkitBackfaceVisibility: 'hidden',

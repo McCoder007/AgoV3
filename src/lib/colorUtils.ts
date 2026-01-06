@@ -295,3 +295,22 @@ export function getCategoryPillClasses(
   };
 }
 
+/**
+ * Generate a swipe gradient from a category color
+ * Creates a gradient that transitions from the category color to a very light tint
+ * @param color - The category color (hex string) or undefined
+ * @returns A CSS linear-gradient string
+ */
+export function getSwipeGradient(color: string | undefined): string {
+  // Default gray color if no category color is provided
+  const defaultColor = '#6B7280';
+  const baseColor = color || defaultColor;
+  
+  // Create a very light tint of the base color (similar to existing gradients)
+  // Using 0.88 to create a very light tint that maintains the color hue
+  const lightenedColor = lightenColor(baseColor, 0.88);
+  
+  // Return gradient in the same format as existing gradients (90deg, from color to lightened)
+  return `linear-gradient(90deg, ${baseColor}, ${lightenedColor})`;
+}
+
