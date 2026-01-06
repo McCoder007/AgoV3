@@ -52,8 +52,10 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
 
     const dragInfo = useRef({
         startX: 0,
+        startY: 0,
         startTime: 0,
         currentX: 0,
+        hasCommittedToSwipe: false, // True once we've determined this is an intentional swipe
     });
 
     const containerRef = useRef<HTMLDivElement>(null);
@@ -179,28 +181,52 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
         }, 300);
     }, [isCompleting, lastLog, reload, onDone]);
 
-    const handleDragStart = (clientX: number) => {
+    const handleDragStart = (clientX: number, clientY: number) => {
         if (isCompleting) return;
         // Allow swipe left only if isToday is true
         // Allow swipe right only if isToday is false
         dragInfo.current = {
             startX: clientX,
+            startY: clientY,
             startTime: Date.now(),
             currentX: clientX,
+            hasCommittedToSwipe: false,
         };
         setIsDragging(true);
     };
 
-    const handleDragMove = (clientX: number) => {
+    const handleDragMove = (clientX: number, clientY: number) => {
         if (!isDragging || isCompleting) return;
-        const diff = clientX - dragInfo.current.startX;
+
+        const diffX = clientX - dragInfo.current.startX;
+        const diffY = clientY - dragInfo.current.startY;
+
+        // If we haven't committed to swiping yet, check if this is an intentional swipe
+        if (!dragInfo.current.hasCommittedToSwipe) {
+            const absDiffX = Math.abs(diffX);
+            const absDiffY = Math.abs(diffY);
+
+            // Require horizontal movement to exceed 12px AND be at least 1.5x the vertical movement
+            // This ensures scrolling doesn't accidentally trigger swipe
+            if (absDiffX >= 12 && absDiffX > absDiffY * 1.5) {
+                dragInfo.current.hasCommittedToSwipe = true;
+            } else if (absDiffY > 10) {
+                // If vertical movement is significant first, this is likely a scroll - cancel
+                setIsDragging(false);
+                setOffsetX(0);
+                return;
+            } else {
+                // Not enough movement yet to determine intent
+                return;
+            }
+        }
 
         if (isToday) {
-            // Undo mode: only allow swipe left (diff < 0)
-            setOffsetX(Math.min(0, diff));
+            // Undo mode: only allow swipe left (diffX < 0)
+            setOffsetX(Math.min(0, diffX));
         } else {
-            // Complete mode: only allow swipe right (diff > 0)
-            setOffsetX(Math.max(0, diff));
+            // Complete mode: only allow swipe right (diffX > 0)
+            setOffsetX(Math.max(0, diffX));
         }
 
         dragInfo.current.currentX = clientX;
@@ -231,19 +257,19 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
     };
 
     const onMouseDown = (e: React.MouseEvent) => {
-        handleDragStart(e.clientX);
+        handleDragStart(e.clientX, e.clientY);
     };
 
     const onTouchStart = (e: React.TouchEvent) => {
-        handleDragStart(e.touches[0].clientX);
+        handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
     };
 
     useEffect(() => {
         if (!isDragging) return;
 
-        const handleMouseMove = (e: MouseEvent) => handleDragMove(e.clientX);
+        const handleMouseMove = (e: MouseEvent) => handleDragMove(e.clientX, e.clientY);
         const handleMouseUp = () => handleDragEnd();
-        const handleTouchMove = (e: TouchEvent) => handleDragMove(e.touches[0].clientX);
+        const handleTouchMove = (e: TouchEvent) => handleDragMove(e.touches[0].clientX, e.touches[0].clientY);
         const handleTouchEnd = () => handleDragEnd();
 
         window.addEventListener('mousemove', handleMouseMove);
