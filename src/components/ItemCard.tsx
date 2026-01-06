@@ -5,7 +5,7 @@ import { Item } from '@/lib/types';
 import { useLastLog, useCategories } from '@/hooks/useData';
 import { diffDaysDateOnly, getTodayDateString, formatDisplayDate } from '@/lib/dateUtils';
 import { getCategoryStyles } from '@/lib/colorUtils';
-import { Check } from 'lucide-react';
+import { Check, Undo2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { logsRepo } from '@/lib/storage/logsRepo';
 
@@ -129,8 +129,38 @@ export function ItemCard({ item, onDone, density }: ItemCardProps) {
         }, 300);
     }, [isCompleting, item.id, reload, onDone, category?.color]);
 
+    const triggerUndo = useCallback(async () => {
+        if (!lastLog || isCompleting) return;
+        setIsCompleting(true);
+        
+        if ('vibrate' in navigator) {
+            navigator.vibrate(50);
+        }
+
+        setIsStampActive(true);
+        setTimeout(() => setIsStampActive(false), 300);
+
+        // Animation sequence for undo
+        setTimeout(() => {
+            setIsCollapsed(true);
+            setTimeout(async () => {
+                await logsRepo.delete(lastLog.id);
+                reload();
+                onDone?.();
+                // After reload, we need to make sure the card is visible again if it's still in the list
+                // But usually the parent will re-render the list. 
+                // For safety, we reset states if the component doesn't unmount
+                setIsCollapsed(false);
+                setIsCompleting(false);
+                setOffsetX(0);
+            }, 300);
+        }, 300);
+    }, [isCompleting, lastLog, reload, onDone]);
+
     const handleDragStart = (clientX: number) => {
-        if (isCompleting || isToday) return;
+        if (isCompleting) return;
+        // Allow swipe left only if isToday is true
+        // Allow swipe right only if isToday is false
         dragInfo.current = {
             startX: clientX,
             startTime: Date.now(),
@@ -142,7 +172,15 @@ export function ItemCard({ item, onDone, density }: ItemCardProps) {
     const handleDragMove = (clientX: number) => {
         if (!isDragging || isCompleting) return;
         const diff = clientX - dragInfo.current.startX;
-        setOffsetX(Math.max(0, diff));
+        
+        if (isToday) {
+            // Undo mode: only allow swipe left (diff < 0)
+            setOffsetX(Math.min(0, diff));
+        } else {
+            // Complete mode: only allow swipe right (diff > 0)
+            setOffsetX(Math.max(0, diff));
+        }
+        
         dragInfo.current.currentX = clientX;
     };
 
@@ -151,15 +189,19 @@ export function ItemCard({ item, onDone, density }: ItemCardProps) {
         
         const diff = dragInfo.current.currentX - dragInfo.current.startX;
         const duration = Date.now() - dragInfo.current.startTime;
-        const velocity = diff / duration; // px/ms
+        const velocity = Math.abs(diff) / duration; // px/ms
 
-        const thresholdMet = diff > 120 || (velocity > 0.5 && diff > 30);
+        const thresholdMet = Math.abs(diff) > 120 || (velocity > 0.5 && Math.abs(diff) > 30);
 
         if (thresholdMet) {
-            triggerCompletion();
+            if (isToday && diff < 0) {
+                triggerUndo();
+            } else if (!isToday && diff > 0) {
+                triggerCompletion();
+            } else {
+                setOffsetX(0);
+            }
         } else {
-            // Snap back
-            setIsDragging(false);
             setOffsetX(0);
         }
         
@@ -226,23 +268,27 @@ export function ItemCard({ item, onDone, density }: ItemCardProps) {
         >
             {/* Swipe Background Layer */}
             <div 
-                className={`absolute inset-0 rounded-3xl transition-opacity duration-200 flex items-center px-6 overflow-hidden`}
+                className={`absolute inset-0 rounded-3xl transition-opacity duration-200 flex items-center overflow-hidden ${offsetX < 0 ? 'justify-end px-6' : 'px-6'}`}
                 style={{
-                    background: swipeGradient,
-                    opacity: offsetX > 30 || isCompleting ? 1 : 0,
+                    background: offsetX < 0 
+                        ? 'linear-gradient(270deg, #EF4444, #FEF2F2)' 
+                        : swipeGradient,
+                    opacity: Math.abs(offsetX) > 30 || isCompleting ? 1 : 0,
                 }}
             >
-                <div className="flex items-center gap-3 relative">
+                <div className={`flex items-center gap-3 relative ${offsetX < 0 ? 'flex-row-reverse' : ''}`}>
                     <div 
                         className={`flex items-center justify-center rounded-full bg-white/20 transition-transform duration-300 ${isStampActive ? 'scale-[1.3]' : 'scale-100'}`}
                         style={{ width: 40, height: 40 }}
                     >
-                        <Check size={24} className="text-white" />
+                        {offsetX < 0 ? <Undo2 size={24} className="text-white" /> : <Check size={24} className="text-white" />}
                     </div>
-                    <span className="text-white font-bold text-lg uppercase tracking-wider">Complete</span>
+                    <span className="text-white font-bold text-lg uppercase tracking-wider">
+                        {offsetX < 0 ? 'Undo' : 'Complete'}
+                    </span>
                     
-                    {/* Particles */}
-                    {particles.map(p => (
+                    {/* Particles (only for complete) */}
+                    {offsetX >= 0 && particles.map(p => (
                         <div
                             key={p.id}
                             className="absolute rounded-full pointer-events-none"
@@ -265,11 +311,13 @@ export function ItemCard({ item, onDone, density }: ItemCardProps) {
             <div
                 ref={cardRef}
                 onClick={handleCardClick}
-                className={`block group relative overflow-hidden rounded-3xl bg-white dark:bg-gray-900/50 border ${!isDragging ? 'transition-all duration-300' : 'transition-none'} ${isCompact ? 'px-3 py-3' : 'px-4 py-4'} ${isToday ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'}`}
+                className={`block group relative overflow-hidden rounded-3xl bg-white dark:bg-gray-900/50 border ${!isDragging ? 'transition-all duration-300' : 'transition-none'} ${isCompact ? 'px-3 py-3' : 'px-4 py-4'} cursor-grab active:cursor-grabbing`}
                 style={{
                     borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.10)',
                     boxShadow: isDarkMode ? 'none' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                    transform: isCompleting ? 'translate3d(110%, 0, 0)' : `translate3d(${offsetX}px, 0, 0)`,
+                    transform: isCompleting 
+                        ? (offsetX < 0 ? 'translate3d(-110%, 0, 0)' : 'translate3d(110%, 0, 0)') 
+                        : `translate3d(${offsetX}px, 0, 0)`,
                     transitionProperty: isDragging ? 'none' : 'all',
                     transitionDuration: isDragging ? '0ms' : '300ms',
                     transitionTimingFunction: !isDragging && !isCompleting ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'cubic-bezier(0.4, 0, 0.2, 1)',
