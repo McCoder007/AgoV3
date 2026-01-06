@@ -362,19 +362,19 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
                 className={`block group relative overflow-hidden rounded-3xl border transition-all ${!isDragging ? 'duration-300' : 'transition-none'} ${isCompact ? 'px-3 py-3' : 'px-4 py-4'} cursor-grab active:cursor-grabbing ${showHighlight ? 'z-10' : 'z-0'}`}
                 style={{
                     backgroundColor: showHighlight
-                        ? (isDarkMode ? `${category?.color || '#3B82F6'}33` : `${category?.color || '#3B82F6'}1A`)
+                        ? (isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)')
                         : (isDarkMode ? 'rgba(17, 24, 39, 0.5)' : '#ffffff'),
                     borderColor: showHighlight
-                        ? (category?.color || '#3B82F6')
+                        ? (category?.color || '#3B82F6') + '40'
                         : (isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.10)'),
                     boxShadow: showHighlight
-                        ? `0 0 0 3px ${(category?.color || '#3B82F6')}40, 0 12px 24px -8px rgba(0, 0, 0, 0.15)`
+                        ? '0 10px 20px -5px rgba(0, 0, 0, 0.1)'
                         : (isDarkMode ? 'none' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'),
                     transform: isCompleting
                         ? (offsetX < 0 ? 'translate3d(-110%, 0, 0)' : 'translate3d(110%, 0, 0)')
-                        : `translate3d(${offsetX}px, 0, 0) scale(1)`,
+                        : `translate3d(${offsetX}px, 0, 0) scale(${showHighlight ? 1.03 : 1})`,
                     transitionProperty: 'all',
-                    transitionDuration: (isDragging || showHighlight) ? '0ms' : '300ms',
+                    transitionDuration: isDragging ? '0ms' : '400ms',
                     transitionTimingFunction: showHighlight
                         ? 'cubic-bezier(0.34, 1.56, 0.64, 1)'
                         : (!isDragging && !isCompleting ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'cubic-bezier(0.4, 0, 0.2, 1)'),
