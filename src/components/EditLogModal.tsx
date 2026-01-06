@@ -177,6 +177,7 @@ export function EditLogModal({ isOpen, onClose, log, onSave }: EditLogModalProps
                                         <input
                                             ref={nativeDateRef}
                                             type="date"
+                                            value={log.date}
                                             className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
                                             onChange={handleNativeDateChange}
                                             max={format(new Date(), 'yyyy-MM-dd')}
