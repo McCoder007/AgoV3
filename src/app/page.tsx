@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
 import { useItems, useCategories, usePreferences, useLastLog } from '@/hooks/useData';
 import { ItemCard } from '@/components/ItemCard';
 import { FilterSheet } from '@/components/FilterSheet';
@@ -174,32 +174,22 @@ export default function Home() {
     fetchAllLogs();
   }, [items]);
 
-  // Restore scroll position and highlight last viewed item
-  useEffect(() => {
-    if (sortingReady) {
-      // Small delay to ensure the list has rendered
-      const timer = setTimeout(() => {
-        if (typeof window !== 'undefined') {
-          // Restore scroll position
-          const savedScrollY = sessionStorage.getItem('ago-list-scroll-y');
-          if (savedScrollY && savedScrollY !== '0') {
-            isRestoringScroll.current = true;
-            window.scrollTo({
-              top: parseInt(savedScrollY, 10),
-              behavior: 'instant'
-            });
-            // Brief delay to allow the scroll event to fire before we start saving again
-            setTimeout(() => {
-              isRestoringScroll.current = false;
-              setIsScrollRestored(true);
-            }, 50);
-          } else {
-            // No scroll to restore, mark as ready immediately
-            setIsScrollRestored(true);
-          }
-        }
-      }, 50);
-      return () => clearTimeout(timer);
+  // Restore scroll position immediately using layoutEffect (before paint)
+  useLayoutEffect(() => {
+    if (sortingReady && typeof window !== 'undefined') {
+      const savedScrollY = sessionStorage.getItem('ago-list-scroll-y');
+      if (savedScrollY && savedScrollY !== '0') {
+        isRestoringScroll.current = true;
+        window.scrollTo(0, parseInt(savedScrollY, 10));
+        // Use requestAnimationFrame to ensure scroll happens before we show content
+        requestAnimationFrame(() => {
+          isRestoringScroll.current = false;
+          setIsScrollRestored(true);
+        });
+      } else {
+        // No scroll to restore, mark as ready immediately
+        setIsScrollRestored(true);
+      }
     }
   }, [sortingReady]);
 
@@ -291,8 +281,8 @@ export default function Home() {
 
   return (
     <div
-      className={`flex flex-col h-full min-h-[100dvh] bg-white dark:bg-background transition-opacity duration-150 ${isScrollRestored ? 'opacity-100' : 'opacity-0'
-        }`}
+      className="flex flex-col h-full min-h-[100dvh] bg-white dark:bg-background"
+      style={{ visibility: isScrollRestored ? 'visible' : 'hidden' }}
     >
       {/* Fixed Header */}
       <div
