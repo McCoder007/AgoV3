@@ -2,10 +2,20 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { useItems, useCategories, useItemLogs } from '@/hooks/useData';
+import dynamic from 'next/dynamic';
+import { useItemLogs } from '@/hooks/useData';
+import { useDataContext } from '@/contexts/DataContext';
 import { HistoryList } from '@/components/HistoryList';
-import { EditLogModal } from '@/components/EditLogModal';
-import { EditItemSheet } from '@/components/EditItemSheet';
+
+const EditLogModal = dynamic(
+    () => import('@/components/EditLogModal').then(m => ({ default: m.EditLogModal })),
+    { ssr: false }
+);
+
+const EditItemSheet = dynamic(
+    () => import('@/components/EditItemSheet').then(m => ({ default: m.EditItemSheet })),
+    { ssr: false }
+);
 import { logsRepo } from '@/lib/storage/logsRepo';
 import { getTodayDateString, diffDaysDateOnly, parseDateOnly } from '@/lib/dateUtils';
 import { LogEntry } from '@/lib/types';
@@ -16,8 +26,7 @@ import { useMemo } from 'react';
 
 export default function ItemDetailPage() {
     const { id } = useParams<{ id: string }>();
-    const { items, loading: itemsLoading, reload: reloadItems } = useItems();
-    const { categories, reload: reloadCategories } = useCategories();
+    const { items, itemsLoading, reloadItems, categories, reloadCategories } = useDataContext();
     const { logs, reload: reloadLogs } = useItemLogs(id);
 
     const [editingLog, setEditingLog] = useState<LogEntry | null>(null);

@@ -2,11 +2,12 @@
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Item } from '@/lib/types';
-import { useLastLog, useCategories } from '@/hooks/useData';
+import { useLastLog } from '@/hooks/useData';
+import { useDataContext } from '@/contexts/DataContext';
 import { diffDaysDateOnly, getTodayDateString, formatDisplayDate } from '@/lib/dateUtils';
 import { getCategoryStyles, getSwipeGradient } from '@/lib/colorUtils';
 import { Check, Undo2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { logsRepo } from '@/lib/storage/logsRepo';
 
 interface ItemCardProps {
@@ -28,8 +29,7 @@ interface Particle {
 // Trivial change to trigger HMR rebuild
 export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps) {
     const { lastLog, loading, reload } = useLastLog(item.id);
-    const { categories } = useCategories();
-    const router = useRouter();
+    const { categories } = useDataContext();
     const [isDarkMode, setIsDarkMode] = useState(false);
 
     // Swipe State
@@ -277,11 +277,12 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
         };
     }, [isDragging]);
 
-    const handleCardClick = (e: React.MouseEvent) => {
+    const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
         // Only navigate if we didn't just perform a drag action
         const dragDist = Math.abs(dragInfo.current.currentX - dragInfo.current.startX);
-        if (dragDist < 5) {
-            router.push(`/items/${item.id}`);
+        if (dragDist >= 5 || isDragging || isCompleting) {
+            e.preventDefault();
+            e.stopPropagation();
         }
     };
 
@@ -350,32 +351,37 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
             </div>
 
             {/* Task Card */}
-            <div
-                ref={cardRef}
-                onClick={handleCardClick}
-                className={`block group relative overflow-hidden rounded-3xl border ${isCompact ? 'px-3 py-3' : 'px-4 py-4'} cursor-grab active:cursor-grabbing`}
-                style={{
-                    backgroundColor: (isDarkMode ? '#111827' : '#ffffff'),
-                    borderColor: (isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.10)'),
-                    boxShadow: (isDarkMode ? 'none' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'),
-                    transform: isCompleting
-                        ? (offsetX < 0 ? 'translate3d(-110%, 0, 0)' : 'translate3d(110%, 0, 0)')
-                        : `translate3d(${offsetX + (isHighlighted && !showHighlight ? -20 : 0)}px, 0, 0)`,
-                    transitionProperty: 'transform, opacity',
-                    transitionDuration: isDragging ? '0ms' : '400ms',
-                    transitionTimingFunction: (!isDragging && !isCompleting) ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'cubic-bezier(0.4, 0, 0.2, 1)',
-                    opacity: (isHighlighted && !showHighlight) ? 0 : (isToday ? 0.7 : 1),
-                    zIndex: showHighlight ? 10 : 0,
-                    touchAction: 'pan-y',
-                    willChange: 'transform, opacity',
-                    WebkitUserSelect: 'none',
-                    userSelect: 'none',
-                    WebkitBackfaceVisibility: 'hidden',
-                    backfaceVisibility: 'hidden'
-                }}
-                onMouseDown={onMouseDown}
-                onTouchStart={onTouchStart}
+            <Link
+                href={`/items/${item.id}`}
+                prefetch={true}
+                className="block"
+                onClick={handleLinkClick}
             >
+                <div
+                    ref={cardRef}
+                    className={`group relative overflow-hidden rounded-3xl border ${isCompact ? 'px-3 py-3' : 'px-4 py-4'} cursor-grab active:cursor-grabbing`}
+                    style={{
+                        backgroundColor: (isDarkMode ? '#111827' : '#ffffff'),
+                        borderColor: (isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.10)'),
+                        boxShadow: (isDarkMode ? 'none' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'),
+                        transform: isCompleting
+                            ? (offsetX < 0 ? 'translate3d(-110%, 0, 0)' : 'translate3d(110%, 0, 0)')
+                            : `translate3d(${offsetX + (isHighlighted && !showHighlight ? -20 : 0)}px, 0, 0)`,
+                        transitionProperty: 'transform, opacity',
+                        transitionDuration: isDragging ? '0ms' : '400ms',
+                        transitionTimingFunction: (!isDragging && !isCompleting) ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'cubic-bezier(0.4, 0, 0.2, 1)',
+                        opacity: (isHighlighted && !showHighlight) ? 0 : (isToday ? 0.7 : 1),
+                        zIndex: showHighlight ? 10 : 0,
+                        touchAction: 'pan-y',
+                        willChange: 'transform, opacity',
+                        WebkitUserSelect: 'none',
+                        userSelect: 'none',
+                        WebkitBackfaceVisibility: 'hidden',
+                        backfaceVisibility: 'hidden'
+                    }}
+                    onMouseDown={onMouseDown}
+                    onTouchStart={onTouchStart}
+                >
                 <div className="flex justify-between items-stretch gap-4 pointer-events-none">
                     {/* Left Content */}
                     <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
@@ -424,6 +430,7 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
                     </div>
                 </div>
             </div>
+            </Link>
         </div>
     );
 }

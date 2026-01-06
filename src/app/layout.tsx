@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClientInit } from "@/components/ClientInit";
 import { FilterProvider } from "@/contexts/FilterContext";
+import { DataProvider } from "@/contexts/DataContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -69,11 +70,13 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 text-gray-900 dark:bg-background dark:text-gray-100`}
       >
         <ClientInit />
-        <FilterProvider>
-          <main className="max-w-md mx-auto min-h-[100dvh] bg-white dark:bg-background shadow-2xl relative flex flex-col">
-            {children}
-          </main>
-        </FilterProvider>
+        <DataProvider>
+          <FilterProvider>
+            <main className="max-w-md mx-auto min-h-[100dvh] bg-white dark:bg-background shadow-2xl relative flex flex-col">
+              {children}
+            </main>
+          </FilterProvider>
+        </DataProvider>
       </body>
     </html>
   );

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
-import { useItems, useCategories, usePreferences, useLastLog } from '@/hooks/useData';
+import { usePreferences, useLastLog } from '@/hooks/useData';
+import { useDataContext } from '@/contexts/DataContext';
 import { ItemCard } from '@/components/ItemCard';
 import { FilterSheet } from '@/components/FilterSheet';
 import { SortSheet, SortMethod } from '@/components/SortSheet';
@@ -14,8 +15,7 @@ import { useFilter } from '@/contexts/FilterContext';
 import { Plus, Settings } from 'lucide-react';
 
 export default function Home() {
-  const { items, loading: itemsLoading, reload: reloadItems } = useItems();
-  const { categories, loading: catsLoading, reload: reloadCategories } = useCategories();
+  const { items, itemsLoading, reloadItems, categories, categoriesLoading: catsLoading, reloadCategories } = useDataContext();
   const { prefs } = usePreferences();
 
   // Initialize state from sessionStorage if available
