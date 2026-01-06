@@ -311,7 +311,9 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
                 className={`absolute inset-0 rounded-3xl transition-opacity duration-200 flex items-center overflow-hidden ${offsetX < 0 ? 'justify-end px-6' : 'px-6'}`}
                 style={{
                     background: offsetX < 0
-                        ? 'linear-gradient(270deg, #EF4444, #FEF2F2)'
+                        ? (isDarkMode 
+                            ? 'linear-gradient(270deg, #DC2626, #7F1D1D)' 
+                            : 'linear-gradient(270deg, #EF4444, #FEF2F2)')
                         : swipeGradient,
                     opacity: Math.abs(offsetX) > 30 || isCompleting ? 1 : 0,
                 }}
