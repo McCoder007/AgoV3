@@ -76,3 +76,40 @@ body {
     background-color: var(--background) !important;
   }
 }
+
+/* Modal scrollbar styles */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 4px;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: #4b5563;
+}
+
+/* Firefox scrollbar */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+.dark .overflow-y-auto {
+  scrollbar-color: #4b5563 transparent;
+}
+
+/* Modal shadow styles */
+.modal-shadow {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.dark .modal-shadow {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
