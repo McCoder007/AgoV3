@@ -1,7 +1,7 @@
 'use client';
 
 import { Category } from '@/lib/types';
-import { getCategoryStyles } from '@/lib/colorUtils';
+import { getCategoryColors } from '@/lib/colorUtils';
 import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 
@@ -45,7 +45,7 @@ export function CategoryFilter({ categories, selectedId, onSelect }: CategoryFil
             </button>
             {categories.map((cat) => {
                 const isSelected = selectedId === cat.id;
-                const styles = isSelected && cat.color ? getCategoryStyles(cat.color, isDarkMode) : null;
+                const colors = getCategoryColors(cat.name, cat.color, isDarkMode);
                 
                 return (
                     <button
@@ -57,14 +57,10 @@ export function CategoryFilter({ categories, selectedId, onSelect }: CategoryFil
                                 ? "shadow-md"
                                 : "bg-transparent text-gray-600 border-gray-200 dark:text-gray-400 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800"
                         )}
-                        style={isSelected && styles ? {
-                            backgroundColor: styles.backgroundColor,
-                            color: styles.color,
-                            borderColor: isDarkMode ? `${styles.color}40` : styles.backgroundColor,
-                        } : isSelected ? {
-                            backgroundColor: isDarkMode ? 'white' : '#111827',
-                            color: isDarkMode ? 'black' : 'white',
-                            borderColor: isDarkMode ? 'white' : '#111827',
+                        style={isSelected ? {
+                            backgroundColor: colors.backgroundColor,
+                            color: colors.color,
+                            borderColor: isDarkMode ? `${colors.color}40` : colors.backgroundColor,
                         } : undefined}
                     >
                         {cat.name}

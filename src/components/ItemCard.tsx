@@ -389,7 +389,7 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
                             {item.title}
                         </h3>
                         <div className="flex items-center gap-2 mt-2">
-                            <CategoryPill categoryName={categoryName} isDark={isDarkMode} />
+                            <CategoryPill categoryName={categoryName} customColor={category?.color} isDark={isDarkMode} />
                             {lastLog && (
                                 <span className="text-[13px] font-medium text-gray-400 dark:text-gray-500">
                                     {formatDisplayDate(lastLog.date)}

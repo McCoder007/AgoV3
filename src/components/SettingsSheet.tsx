@@ -8,7 +8,7 @@ import { prefsRepo } from '@/lib/storage/prefsRepo';
 import { Moon, Sun, Monitor, Type, AlignJustify, Plus, Trash2, Edit2, AlertTriangle, X, Check, Tag, Palette } from 'lucide-react';
 import clsx from 'clsx';
 import { DEFAULT_CATEGORY_COLORS } from '@/lib/types';
-import { getCategoryStyles } from '@/lib/colorUtils';
+import { getCategoryColors, getCategoryStyles } from '@/lib/colorUtils';
 import { applyTheme } from '@/lib/themeUtils';
 
 interface SettingsSheetProps {
@@ -269,7 +269,7 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
                     ) : (
                       <>
                         <div className="flex-1 flex items-center gap-3">
-                          {/* Color preview/swatch */}
+                          {/* Color preview/swatch with picker */}
                           <div className="relative" data-color-picker>
                             <button
                               type="button"
@@ -281,7 +281,7 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
                                   ? "ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900 border-transparent"
                                   : "border-gray-200 dark:border-gray-700"
                               )}
-                              style={getCategoryStyles(cat.color, isDarkMode)}
+                              style={getCategoryColors(cat.name, cat.color, isDarkMode)}
                               title="Change color"
                             >
                               {!cat.color && <Palette size={14} className="text-gray-400" />}
@@ -300,13 +300,14 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
                                       style={{ backgroundColor: color }}
                                     />
                                   ))}
-                                  {/* None/Neutral option */}
+                                  {/* Clear/Reset to semantic option */}
                                   <button
                                     onClick={() => handleColorChange(cat.id, '')}
                                     className={clsx(
                                       "w-8 h-8 rounded-full border-2 transition-transform active:scale-90 flex items-center justify-center bg-gray-100 dark:bg-gray-700",
                                       !cat.color ? "border-black dark:border-white scale-110" : "border-transparent hover:scale-110"
                                     )}
+                                    title="Reset to semantic color"
                                   >
                                     <X size={14} className="text-gray-500" />
                                   </button>

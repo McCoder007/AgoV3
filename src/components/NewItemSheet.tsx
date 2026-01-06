@@ -9,6 +9,7 @@ import { recentCategoriesRepo } from '@/lib/storage/recentCategories';
 import { useCategories } from '@/hooks/useData';
 import { format, parse, isValid, isFuture } from 'date-fns';
 import { LogEntry } from '@/lib/types';
+import { getCategoryColors } from '@/lib/colorUtils';
 import clsx from 'clsx';
 
 const DRAFT_STORAGE_KEY = 'ago-new-item-draft';
@@ -67,6 +68,7 @@ export function NewItemSheet({
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   
   const inputRef = useRef<HTMLInputElement>(null);
   const dateInputRef = useRef<HTMLInputElement>(null);
@@ -75,6 +77,23 @@ export function NewItemSheet({
   const contentRef = useRef<HTMLDivElement>(null);
 
   const isFirstRender = useRef(true);
+
+  // Detect dark mode
+  useEffect(() => {
+    const checkDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+    
+    checkDarkMode();
+    
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+    
+    return () => observer.disconnect();
+  }, []);
 
   // Handle opening/closing animations
   useEffect(() => {
@@ -314,7 +333,7 @@ export function NewItemSheet({
               <div className="grid grid-cols-3 gap-2.5">
                 {displayCategories.map(cat => {
                   const isSelected = categoryId === cat.id;
-                  const categoryColor = cat.color || '#6b7280';
+                  const colors = getCategoryColors(cat.name, cat.color, isDarkMode);
                   return (
                     <button
                       key={cat.id}
@@ -322,9 +341,12 @@ export function NewItemSheet({
                       onClick={() => setCategoryId(isSelected ? '' : cat.id)}
                       className={clsx(
                         "w-full py-3 px-4 rounded-xl text-sm font-semibold text-center border-none cursor-pointer transition-all duration-200 hover:-translate-y-0.5",
-                        isSelected ? "text-white" : "bg-[#f5f7fa] dark:bg-[#2a3142] text-[#6b7280] dark:text-[#9ca3af]"
+                        isSelected ? "" : "bg-[#f5f7fa] dark:bg-[#2a3142] text-[#6b7280] dark:text-[#9ca3af]"
                       )}
-                      style={isSelected ? { backgroundColor: categoryColor } : {}}
+                      style={isSelected ? { 
+                        backgroundColor: colors.color,
+                        color: '#FFFFFF'
+                      } : {}}
                     >
                       <span className="truncate block">{cat.name}</span>
                     </button>

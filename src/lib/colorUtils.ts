@@ -359,6 +359,28 @@ export function getSemanticCategoryColors(
 }
 
 /**
+ * Get category colors with priority: Custom Color > Semantic Color > Gray Fallback
+ * This is the main function to use for displaying category colors throughout the app
+ * @param categoryName - The category name (for semantic color lookup)
+ * @param customColor - Optional custom color from database (cat.color)
+ * @param isDark - Whether dark mode is active
+ * @returns Object with backgroundColor and color properties
+ */
+export function getCategoryColors(
+  categoryName: string,
+  customColor: string | undefined,
+  isDark: boolean
+): { backgroundColor: string; color: string } {
+  // Priority 1: Use custom color if provided
+  if (customColor) {
+    return getCategoryStyles(customColor, isDark);
+  }
+  
+  // Priority 2: Use semantic color based on category name
+  return getSemanticCategoryColors(categoryName, isDark);
+}
+
+/**
  * Generate a swipe gradient from a category color
  * Creates a gradient that transitions from the category color to a very light tint
  * @param color - The category color (hex string) or undefined

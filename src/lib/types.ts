@@ -46,7 +46,7 @@ export const DEFAULT_CATEGORIES = [
   'Personal',
 ];
 
-// Default color palette for categories (12 accessible colors)
+// Default color palette for categories (16 accessible colors)
 export const DEFAULT_CATEGORY_COLORS = [
   '#3B82F6', // Blue
   '#10B981', // Emerald
@@ -60,4 +60,8 @@ export const DEFAULT_CATEGORY_COLORS = [
   '#14B8A6', // Teal
   '#6366F1', // Indigo
   '#EC4899', // Pink
+  '#84CC16', // Lime
+  '#EF4444', // Red
+  '#0EA5E9', // Sky
+  '#A855F7', // Purple
 ];

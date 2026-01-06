@@ -7,6 +7,7 @@ import { CategoryPicker } from '@/components/CategoryPicker';
 import { itemsRepo } from '@/lib/storage/itemsRepo';
 import { recentCategoriesRepo } from '@/lib/storage/recentCategories';
 import { useCategories } from '@/hooks/useData';
+import { getCategoryColors } from '@/lib/colorUtils';
 import clsx from 'clsx';
 
 interface EditItemSheetProps {
@@ -37,10 +38,28 @@ export function EditItemSheet({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   
   const inputRef = useRef<HTMLInputElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Detect dark mode
+  useEffect(() => {
+    const checkDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+    
+    checkDarkMode();
+    
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+    
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -201,7 +220,7 @@ export function EditItemSheet({
               <div className="grid grid-cols-3 gap-2.5">
                 {displayCategories.map(cat => {
                   const isSelected = categoryId === cat.id;
-                  const categoryColor = cat.color || '#6b7280';
+                  const colors = getCategoryColors(cat.name, cat.color, isDarkMode);
                   return (
                     <button
                       key={cat.id}
@@ -209,9 +228,12 @@ export function EditItemSheet({
                       onClick={() => setCategoryId(isSelected ? '' : cat.id)}
                       className={clsx(
                         "w-full py-3 px-4 rounded-xl text-sm font-semibold text-center border-none cursor-pointer transition-all duration-200 hover:-translate-y-0.5",
-                        isSelected ? "text-white" : "bg-[#f5f7fa] dark:bg-[#2a3142] text-[#6b7280] dark:text-[#9ca3af]"
+                        isSelected ? "" : "bg-[#f5f7fa] dark:bg-[#2a3142] text-[#6b7280] dark:text-[#9ca3af]"
                       )}
-                      style={isSelected ? { backgroundColor: categoryColor } : {}}
+                      style={isSelected ? { 
+                        backgroundColor: colors.color,
+                        color: '#FFFFFF'
+                      } : {}}
                     >
                       <span className="truncate block">{cat.name}</span>
                     </button>

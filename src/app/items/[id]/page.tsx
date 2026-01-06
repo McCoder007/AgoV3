@@ -152,7 +152,7 @@ export default function ItemDetailPage() {
                                 {item.title}
                             </h1>
                             {category && (
-                                <CategoryPill categoryName={category.name} isDark={isDarkMode} />
+                                <CategoryPill categoryName={category.name} customColor={category.color} isDark={isDarkMode} />
                             )}
                         </div>
 

@@ -5,6 +5,7 @@ import { X, Search, Plus, Check } from 'lucide-react';
 import { Category, DEFAULT_CATEGORY_COLORS } from '@/lib/types';
 import { categoriesRepo } from '@/lib/storage/categoriesRepo';
 import { recentCategoriesRepo } from '@/lib/storage/recentCategories';
+import { getCategoryColors } from '@/lib/colorUtils';
 import clsx from 'clsx';
 
 interface CategoryPickerProps {
@@ -206,6 +207,28 @@ function CategoryRow({
   isSelected: boolean; 
   onSelect: () => void;
 }) {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    const checkDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+    
+    checkDarkMode();
+    
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+    
+    return () => observer.disconnect();
+  }, []);
+
+  const colors = getCategoryColors(category.name, category.color, isDarkMode);
+  // Use the text color (vibrant color) for the dot
+  const dotColor = colors.color;
+
   return (
     <button
       onClick={onSelect}
@@ -216,7 +239,7 @@ function CategoryRow({
     >
       <div 
         className="w-3 h-3 rounded-full flex-shrink-0" 
-        style={{ backgroundColor: category.color || '#6B7280' }}
+        style={{ backgroundColor: dotColor }}
       />
       <span className={clsx(
         "flex-1 font-medium",

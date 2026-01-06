@@ -1,23 +1,25 @@
 'use client';
 
-import { getSemanticCategoryColors } from '@/lib/colorUtils';
+import { getCategoryColors } from '@/lib/colorUtils';
 
 interface CategoryPillProps {
   categoryName: string;
+  customColor?: string;
   isDark: boolean;
   className?: string;
 }
 
 /**
- * Shared CategoryPill component with consistent sizing and semantic colors.
+ * Shared CategoryPill component with consistent sizing and colors.
+ * Uses custom color if provided, otherwise falls back to semantic colors.
  * Uses exact specifications (reduced by 25%):
  * - Font: 9.75px, weight 600, letter-spacing 0.225px, uppercase
  * - Padding: 4.5px vertical, 10.5px horizontal
  * - Border radius: 4.5px
  * - Display: inline-block, white-space: nowrap
  */
-export function CategoryPill({ categoryName, isDark, className = '' }: CategoryPillProps) {
-  const colors = getSemanticCategoryColors(categoryName, isDark);
+export function CategoryPill({ categoryName, customColor, isDark, className = '' }: CategoryPillProps) {
+  const colors = getCategoryColors(categoryName, customColor, isDark);
 
   return (
     <span
