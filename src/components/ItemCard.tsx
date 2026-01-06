@@ -262,6 +262,10 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
         // Only navigate if we didn't just perform a drag action
         const dragDist = Math.abs(dragInfo.current.currentX - dragInfo.current.startX);
         if (dragDist < 5) {
+            // Save last viewed item ID
+            if (typeof window !== 'undefined') {
+                sessionStorage.setItem('ago-last-viewed-item-id', item.id);
+            }
             router.push(`/items/${item.id}`);
         }
     };
@@ -332,25 +336,28 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
             <div
                 ref={cardRef}
                 onClick={handleCardClick}
-                className={`block group relative overflow-hidden rounded-3xl bg-white dark:bg-gray-900/50 border ${!isDragging ? 'transition-all duration-300' : 'transition-none'} ${isCompact ? 'px-3 py-3' : 'px-4 py-4'} cursor-grab active:cursor-grabbing ${showHighlight ? 'z-10' : 'z-0'}`}
+                className={`block group relative overflow-hidden rounded-3xl border transition-all ${!isDragging ? 'duration-300' : 'transition-none'} ${isCompact ? 'px-3 py-3' : 'px-4 py-4'} cursor-grab active:cursor-grabbing ${showHighlight ? 'z-10' : 'z-0'}`}
                 style={{
+                    backgroundColor: showHighlight 
+                        ? (isDarkMode ? `${category?.color || '#3B82F6'}33` : `${category?.color || '#3B82F6'}1A`)
+                        : (isDarkMode ? 'rgba(17, 24, 39, 0.5)' : '#ffffff'),
                     borderColor: showHighlight 
                         ? (category?.color || '#3B82F6') 
                         : (isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.10)'),
                     boxShadow: showHighlight
-                        ? `0 0 0 2px ${(category?.color || '#3B82F6')}40, 0 8px 16px -4px rgba(0, 0, 0, 0.1)`
+                        ? `0 0 0 3px ${(category?.color || '#3B82F6')}40, 0 12px 24px -8px rgba(0, 0, 0, 0.15)`
                         : (isDarkMode ? 'none' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'),
                     transform: isCompleting 
                         ? (offsetX < 0 ? 'translate3d(-110%, 0, 0)' : 'translate3d(110%, 0, 0)') 
-                        : `translate3d(${offsetX}px, 0, 0) ${showHighlight ? 'scale(1.02)' : 'scale(1)'}`,
-                    transitionProperty: isDragging ? 'none' : 'all',
-                    transitionDuration: isDragging ? '0ms' : (showHighlight ? '500ms' : '300ms'),
+                        : `translate3d(${offsetX}px, 0, 0) ${showHighlight ? 'scale(1.03)' : 'scale(1)'}`,
+                    transitionProperty: 'all',
+                    transitionDuration: isDragging ? '0ms' : (showHighlight ? '300ms' : '300ms'),
                     transitionTimingFunction: showHighlight 
                         ? 'cubic-bezier(0.34, 1.56, 0.64, 1)'
                         : (!isDragging && !isCompleting ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'cubic-bezier(0.4, 0, 0.2, 1)'),
                     opacity: isToday ? 0.7 : 1,
                     touchAction: 'pan-y',
-                    willChange: 'transform',
+                    willChange: 'transform, background-color, border-color, box-shadow',
                     WebkitUserSelect: 'none',
                     userSelect: 'none',
                     WebkitBackfaceVisibility: 'hidden',

@@ -17,10 +17,30 @@ export default function Home() {
   const { items, loading: itemsLoading, reload: reloadItems } = useItems();
   const { categories, loading: catsLoading } = useCategories();
   const { prefs } = usePreferences();
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [sortMethod, setSortMethod] = useState<SortMethod>('recently-done');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  
+  // Initialize state from sessionStorage if available
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('ago-selected-category') || null;
+    }
+    return null;
+  });
+  
+  const [sortMethod, setSortMethod] = useState<SortMethod>(() => {
+    if (typeof window !== 'undefined') {
+      return (sessionStorage.getItem('ago-sort-method') as SortMethod) || 'recently-done';
+    }
+    return 'recently-done';
+  });
+  
+  const [searchQuery, setSearchQuery] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('ago-search-query') || '';
+    }
+    return '';
+  });
+
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [scrollY, setScrollY] = useState(0);
   const headerRef = useRef<HTMLDivElement>(null);
   const { 
@@ -38,6 +58,29 @@ export default function Home() {
     closeNewItemSheet
   } = useFilter();
 
+  // Persist filter states to sessionStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (selectedCategory) {
+        sessionStorage.setItem('ago-selected-category', selectedCategory);
+      } else {
+        sessionStorage.removeItem('ago-selected-category');
+      }
+    }
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('ago-sort-method', sortMethod);
+    }
+  }, [sortMethod]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('ago-search-query', searchQuery);
+    }
+  }, [searchQuery]);
+
   // Debounce search query with 250ms delay
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -47,10 +90,16 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Track scroll position for header shadow
+  // Track scroll position for header shadow and persistence
   useEffect(() => {
     const handleScroll = () => {
-      setScrollY(window.scrollY);
+      const currentScrollY = window.scrollY;
+      setScrollY(currentScrollY);
+      
+      // Don't save if we're at 0 (might be initial load before restoration)
+      // or if we're in the middle of restoring (handled by a flag if needed, 
+      // but simple throttle/debounce or just saving is usually fine)
+      sessionStorage.setItem('ago-list-scroll-y', currentScrollY.toString());
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -94,6 +143,40 @@ export default function Home() {
     }
     fetchAllLogs();
   }, [items]);
+
+  // Restore scroll position and highlight last viewed item
+  useEffect(() => {
+    if (sortingReady) {
+      // Small delay to ensure the list has rendered
+      const timer = setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          // 1. Highlight last viewed item
+          const lastViewedId = sessionStorage.getItem('ago-last-viewed-item-id');
+          if (lastViewedId) {
+            setHighlightedItemId(lastViewedId);
+            // Clear from session storage so it doesn't highlight again on refresh
+            sessionStorage.removeItem('ago-last-viewed-item-id');
+            
+            // Clear highlight after some time
+            setTimeout(() => {
+              setHighlightedItemId(null);
+            }, 3000);
+          } else {
+            // 2. Only restore scroll position if we're not highlighting/auto-scrolling to an item
+            // (ItemCard handles its own scrolling into view when highlighted)
+            const savedScrollY = sessionStorage.getItem('ago-list-scroll-y');
+            if (savedScrollY) {
+              window.scrollTo({
+                top: parseInt(savedScrollY, 10),
+                behavior: 'instant'
+              });
+            }
+          }
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [sortingReady]);
 
   const sortedItems = useMemo(() => {
     if (!sortingReady) return [];
@@ -253,7 +336,7 @@ export default function Home() {
                   // Clear highlight after some time
                   setTimeout(() => {
                     setHighlightedItemId(null);
-                  }, 2500);
+                  }, 800);
                 }
               }}
             />
