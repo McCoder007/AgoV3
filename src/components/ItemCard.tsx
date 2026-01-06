@@ -39,7 +39,7 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
     const { categories } = useCategories();
     const router = useRouter();
     const [isDarkMode, setIsDarkMode] = useState(false);
-    
+
     // Swipe State
     const [isDragging, setIsDragging] = useState(false);
     const [isCompleting, setIsCompleting] = useState(false);
@@ -49,13 +49,13 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
     const [particles, setParticles] = useState<Particle[]>([]);
     const [particlesActive, setParticlesActive] = useState(false);
     const [showHighlight, setShowHighlight] = useState(false);
-    
+
     const dragInfo = useRef({
         startX: 0,
         startTime: 0,
         currentX: 0,
     });
-    
+
     const containerRef = useRef<HTMLDivElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
 
@@ -64,9 +64,9 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
         if (isHighlighted && containerRef.current) {
             // Small delay to ensure the list has finished re-sorting
             const timer = setTimeout(() => {
-                containerRef.current?.scrollIntoView({ 
-                    behavior: 'instant', 
-                    block: 'center' 
+                containerRef.current?.scrollIntoView({
+                    behavior: 'instant',
+                    block: 'center'
                 });
                 setShowHighlight(true);
                 // Highlight stays for the duration set in parent (2.5s)
@@ -82,15 +82,15 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
         const checkDarkMode = () => {
             setIsDarkMode(document.documentElement.classList.contains('dark'));
         };
-        
+
         checkDarkMode();
-        
+
         const observer = new MutationObserver(checkDarkMode);
         observer.observe(document.documentElement, {
             attributes: true,
             attributeFilter: ['class'],
         });
-        
+
         return () => observer.disconnect();
     }, []);
 
@@ -102,7 +102,7 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
     const triggerCompletion = useCallback(async () => {
         if (isCompleting) return;
         setIsCompleting(true);
-        
+
         // Haptic Feedback
         if ('vibrate' in navigator) {
             navigator.vibrate(50);
@@ -124,14 +124,14 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
         }));
         setParticles(newParticles);
         setParticlesActive(false);
-        
+
         // Use requestAnimationFrame to ensure the initial state (at 0,0) is rendered before triggering animation
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 setParticlesActive(true);
             });
         });
-        
+
         setTimeout(() => {
             setParticles([]);
             setParticlesActive(false);
@@ -154,7 +154,7 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
     const triggerUndo = useCallback(async () => {
         if (!lastLog || isCompleting) return;
         setIsCompleting(true);
-        
+
         if ('vibrate' in navigator) {
             navigator.vibrate(50);
         }
@@ -194,7 +194,7 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
     const handleDragMove = (clientX: number) => {
         if (!isDragging || isCompleting) return;
         const diff = clientX - dragInfo.current.startX;
-        
+
         if (isToday) {
             // Undo mode: only allow swipe left (diff < 0)
             setOffsetX(Math.min(0, diff));
@@ -202,13 +202,13 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
             // Complete mode: only allow swipe right (diff > 0)
             setOffsetX(Math.max(0, diff));
         }
-        
+
         dragInfo.current.currentX = clientX;
     };
 
     const handleDragEnd = () => {
         if (!isDragging || isCompleting) return;
-        
+
         const diff = dragInfo.current.currentX - dragInfo.current.startX;
         const duration = Date.now() - dragInfo.current.startTime;
         const velocity = Math.abs(diff) / duration; // px/ms
@@ -226,7 +226,7 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
         } else {
             setOffsetX(0);
         }
-        
+
         setIsDragging(false);
     };
 
@@ -263,10 +263,6 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
         // Only navigate if we didn't just perform a drag action
         const dragDist = Math.abs(dragInfo.current.currentX - dragInfo.current.startX);
         if (dragDist < 5) {
-            // Save item ID for scroll restoration and highlighting
-            if (typeof window !== 'undefined') {
-                sessionStorage.setItem('ago-last-viewed-id', item.id);
-            }
             router.push(`/items/${item.id}`);
         }
     };
@@ -283,7 +279,7 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
     const isCompact = density === 'compact';
 
     return (
-        <div 
+        <div
             ref={containerRef}
             className={`relative transition-all duration-300 ease-out overflow-hidden`}
             style={{
@@ -293,17 +289,17 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
             }}
         >
             {/* Swipe Background Layer */}
-            <div 
+            <div
                 className={`absolute inset-0 rounded-3xl transition-opacity duration-200 flex items-center overflow-hidden ${offsetX < 0 ? 'justify-end px-6' : 'px-6'}`}
                 style={{
-                    background: offsetX < 0 
-                        ? 'linear-gradient(270deg, #EF4444, #FEF2F2)' 
+                    background: offsetX < 0
+                        ? 'linear-gradient(270deg, #EF4444, #FEF2F2)'
                         : swipeGradient,
                     opacity: Math.abs(offsetX) > 30 || isCompleting ? 1 : 0,
                 }}
             >
                 <div className={`flex items-center gap-3 relative ${offsetX < 0 ? 'flex-row-reverse' : ''}`}>
-                    <div 
+                    <div
                         className={`flex items-center justify-center rounded-full bg-white/20 transition-transform duration-300 ${isStampActive ? 'scale-[1.3]' : 'scale-100'}`}
                         style={{ width: 40, height: 40 }}
                     >
@@ -312,7 +308,7 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
                     <span className="text-white font-bold text-lg uppercase tracking-wider">
                         {offsetX < 0 ? 'Undo' : 'Complete'}
                     </span>
-                    
+
                     {/* Particles (only for complete) */}
                     {offsetX >= 0 && particles.map(p => (
                         <div
@@ -339,21 +335,21 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
                 onClick={handleCardClick}
                 className={`block group relative overflow-hidden rounded-3xl border transition-all ${!isDragging ? 'duration-300' : 'transition-none'} ${isCompact ? 'px-3 py-3' : 'px-4 py-4'} cursor-grab active:cursor-grabbing ${showHighlight ? 'z-10' : 'z-0'}`}
                 style={{
-                    backgroundColor: showHighlight 
+                    backgroundColor: showHighlight
                         ? (isDarkMode ? `${category?.color || '#3B82F6'}33` : `${category?.color || '#3B82F6'}1A`)
                         : (isDarkMode ? 'rgba(17, 24, 39, 0.5)' : '#ffffff'),
-                    borderColor: showHighlight 
-                        ? (category?.color || '#3B82F6') 
+                    borderColor: showHighlight
+                        ? (category?.color || '#3B82F6')
                         : (isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.10)'),
                     boxShadow: showHighlight
                         ? `0 0 0 3px ${(category?.color || '#3B82F6')}40, 0 12px 24px -8px rgba(0, 0, 0, 0.15)`
                         : (isDarkMode ? 'none' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'),
-                    transform: isCompleting 
-                        ? (offsetX < 0 ? 'translate3d(-110%, 0, 0)' : 'translate3d(110%, 0, 0)') 
+                    transform: isCompleting
+                        ? (offsetX < 0 ? 'translate3d(-110%, 0, 0)' : 'translate3d(110%, 0, 0)')
                         : `translate3d(${offsetX}px, 0, 0) scale(1)`,
                     transitionProperty: 'all',
                     transitionDuration: (isDragging || showHighlight) ? '0ms' : '300ms',
-                    transitionTimingFunction: showHighlight 
+                    transitionTimingFunction: showHighlight
                         ? 'cubic-bezier(0.34, 1.56, 0.64, 1)'
                         : (!isDragging && !isCompleting ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'cubic-bezier(0.4, 0, 0.2, 1)'),
                     opacity: isToday ? 0.7 : 1,
@@ -374,9 +370,9 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
                             {item.title}
                         </h3>
                         <div className="flex items-center gap-2 mt-2">
-                            <span 
+                            <span
                                 className="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
-                                style={categoryStyles ? { 
+                                style={categoryStyles ? {
                                     color: categoryStyles.color,
                                     backgroundColor: categoryStyles.backgroundColor,
                                     border: isDarkMode ? `1px solid ${categoryStyles.color}20` : 'none'
