@@ -15,7 +15,7 @@ import { Plus, Settings } from 'lucide-react';
 
 export default function Home() {
   const { items, loading: itemsLoading, reload: reloadItems } = useItems();
-  const { categories, loading: catsLoading } = useCategories();
+  const { categories, loading: catsLoading, reload: reloadCategories } = useCategories();
   const { prefs } = usePreferences();
 
   // Initialize state from sessionStorage if available
@@ -222,7 +222,7 @@ export default function Home() {
       filtered = filtered.filter(i => i.categoryId === selectedCategory);
     }
 
-    return filtered.sort((a, b) => {
+    const sorted = filtered.sort((a, b) => {
       const logA = lastLogs[a.id];
       const logB = lastLogs[b.id];
 
@@ -265,7 +265,9 @@ export default function Home() {
           return a.title.localeCompare(b.title);
       }
     });
-  }, [items, selectedCategory, lastLogs, sortingReady, sortMethod, debouncedSearchQuery, categories]);
+
+    return sorted;
+  }, [items, selectedCategory, lastLogs, sortingReady, sortMethod, debouncedSearchQuery, categories, highlightedItemId]);
 
   if (itemsLoading || catsLoading || !sortingReady) {
     return (
@@ -380,6 +382,7 @@ export default function Home() {
         categories={categories}
         selectedCategory={selectedCategory}
         onCategoryChange={setSelectedCategory}
+        onCategoryCreated={reloadCategories}
       />
       <SortSheet
         isOpen={isSortSheetOpen}
@@ -394,7 +397,27 @@ export default function Home() {
       <NewItemSheet
         isOpen={isNewItemSheetOpen}
         onClose={closeNewItemSheet}
-        onSave={reloadItems}
+        onSave={(newItemId, logEntry) => {
+          // Immediately update lastLogs if a log was created, so the item is sorted correctly from the start
+          if (logEntry) {
+            setLastLogs(prev => ({
+              ...prev,
+              [newItemId]: logEntry,
+            }));
+            // Also update allLogs for consistency
+            setAllLogs(prev => ({
+              ...prev,
+              [newItemId]: [logEntry],
+            }));
+          }
+          reloadItems();
+          // Highlight the newly created item
+          setHighlightedItemId(newItemId);
+          setTimeout(() => {
+            setHighlightedItemId(null);
+          }, 2500);
+        }}
+        onCategoryCreated={reloadCategories}
       />
     </div>
   );

@@ -8,6 +8,7 @@ import { logsRepo } from '@/lib/storage/logsRepo';
 import { recentCategoriesRepo } from '@/lib/storage/recentCategories';
 import { useCategories } from '@/hooks/useData';
 import { format, parse, isValid, isFuture } from 'date-fns';
+import { LogEntry } from '@/lib/types';
 import clsx from 'clsx';
 
 const DRAFT_STORAGE_KEY = 'ago-new-item-draft';
@@ -47,13 +48,15 @@ const clearDraft = () => {
 interface NewItemSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: () => void;
+  onSave: (newItemId: string, logEntry?: LogEntry) => void;
+  onCategoryCreated?: () => void;
 }
 
 export function NewItemSheet({
   isOpen,
   onClose,
   onSave,
+  onCategoryCreated,
 }: NewItemSheetProps) {
   const { categories, reload: reloadCategories } = useCategories();
   const [title, setTitle] = useState('');
@@ -72,18 +75,26 @@ export function NewItemSheet({
   const sheetRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  const isFirstRender = useRef(true);
+
   // Handle opening/closing animations
   useEffect(() => {
     if (isOpen) {
       setShouldRender(true);
-      const draft = getDraft();
-      if (draft) {
-        setTitle(draft.title);
-        setCategoryId(draft.categoryId);
-      } else {
-        setTitle('');
-        setCategoryId('');
+      
+      // Only load from draft when first opening
+      if (isFirstRender.current) {
+        const draft = getDraft();
+        if (draft) {
+          setTitle(draft.title);
+          setCategoryId(draft.categoryId);
+        } else {
+          setTitle('');
+          setCategoryId('');
+        }
+        isFirstRender.current = false;
       }
+      
       setLastDoneInput('');
       setLastDoneError('');
       setDragY(0);
@@ -93,6 +104,7 @@ export function NewItemSheet({
       return () => clearTimeout(timer);
     } else {
       setIsAnimating(false);
+      isFirstRender.current = true; // Reset for next time
       const timer = setTimeout(() => {
         setShouldRender(false);
       }, 300);
@@ -186,10 +198,11 @@ export function NewItemSheet({
         categoryId: categoryId || '',
       });
 
+      let logEntry: LogEntry | undefined;
       if (lastDoneInput) {
         const parsed = parse(lastDoneInput, 'MM/dd/yyyy', new Date());
-        const dateStr = format(parsed, 'yyyy-MM-dd');
-        await logsRepo.add(newItem.id, dateStr);
+        const logDate = format(parsed, 'yyyy-MM-dd');
+        logEntry = await logsRepo.add(newItem.id, logDate);
       }
 
       if (categoryId) {
@@ -197,7 +210,7 @@ export function NewItemSheet({
       }
 
       clearDraft();
-      onSave();
+      onSave(newItem.id, logEntry);
       onClose();
     } catch (error) {
       console.error('Failed to create item:', error);
@@ -235,7 +248,7 @@ export function NewItemSheet({
   };
 
   // Category Chips logic
-  const recentIds = useMemo(() => recentCategoriesRepo.getRecentIds(), [isOpen]);
+  const recentIds = useMemo(() => recentCategoriesRepo.getRecentIds(), [isOpen, categoryId]);
   const displayCategories = useMemo(() => {
     const recent = categories.filter(c => recentIds.includes(c.id))
       .sort((a, b) => recentIds.indexOf(a.id) - recentIds.indexOf(b.id));
@@ -444,8 +457,16 @@ export function NewItemSheet({
         selectedId={categoryId}
         onSelect={setCategoryId}
         onCategoryCreated={async (newId) => {
-          await reloadCategories();
+          // Track the new category as recent first so it appears in the grid
+          recentCategoriesRepo.trackUsage(newId);
+          // Set the category as selected
           setCategoryId(newId);
+          // Reload categories to get the updated list
+          await reloadCategories();
+          // Close the picker after state updates complete
+          setIsPickerOpen(false);
+          // Call optional callback from Home
+          onCategoryCreated?.();
         }}
       />
     </div>
