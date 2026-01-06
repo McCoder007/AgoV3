@@ -203,13 +203,20 @@ export default function ItemDetailPage() {
             <main className="flex-1">
                 {/* Action Section */}
                 <section className="px-6 py-6 bg-white dark:bg-black">
-                    <button
-                        onClick={handleDone}
-                        className="w-full py-[18px] bg-primary-blue text-white rounded-2xl text-[17px] font-semibold flex items-center justify-center gap-2 active:scale-98 transition-all shadow-button dark:shadow-button border-none cursor-pointer"
-                    >
-                        <span className="text-2xl">✓</span>
-                        I Just Did This
-                    </button>
+                    {daysAgo === 0 && lastLog ? (
+                        <div className="w-[75%] mx-auto mb-6 py-[14px] bg-transparent text-text-secondary dark:text-text-secondary rounded-xl text-base font-medium flex items-center justify-center gap-2">
+                            <span className="text-2xl text-[#10b981]">✓</span>
+                            Completed today
+                        </div>
+                    ) : (
+                        <button
+                            onClick={handleDone}
+                            className="w-[75%] mx-auto mb-6 py-[14px] bg-[#E3F2FF] dark:bg-[rgba(0,122,255,0.15)] text-[#007AFF] rounded-xl text-base font-medium flex items-center justify-center gap-2 active:bg-[#d0e8ff] dark:active:bg-[rgba(0,122,255,0.25)] transition-colors duration-200 border-none cursor-pointer"
+                        >
+                            <span className="text-2xl">✓</span>
+                            I Just Did This
+                        </button>
+                    )}
                 </section>
 
                 {/* History Section */}
