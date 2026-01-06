@@ -43,6 +43,7 @@ export default function Home() {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [scrollY, setScrollY] = useState(0);
   const headerRef = useRef<HTMLDivElement>(null);
+  const isRestoringScroll = useRef(false);
   const { 
     isFilterSheetOpen, 
     isSortSheetOpen, 
@@ -97,9 +98,10 @@ export default function Home() {
       setScrollY(currentScrollY);
       
       // Don't save if we're at 0 (might be initial load before restoration)
-      // or if we're in the middle of restoring (handled by a flag if needed, 
-      // but simple throttle/debounce or just saving is usually fine)
-      sessionStorage.setItem('ago-list-scroll-y', currentScrollY.toString());
+      // or if we're in the middle of restoring
+      if (!isRestoringScroll.current && currentScrollY > 0) {
+        sessionStorage.setItem('ago-list-scroll-y', currentScrollY.toString());
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -115,6 +117,24 @@ export default function Home() {
   const [lastLogs, setLastLogs] = useState<Record<string, LogEntry | undefined>>({});
   const [allLogs, setAllLogs] = useState<Record<string, LogEntry[]>>({});
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
+
+  // Check for last viewed item on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const lastViewedId = sessionStorage.getItem('ago-last-viewed-id');
+      if (lastViewedId) {
+        setHighlightedItemId(lastViewedId);
+        // Clear it so it doesn't highlight again on refresh
+        sessionStorage.removeItem('ago-last-viewed-id');
+        
+        // Auto-clear highlight after animation
+        const timer = setTimeout(() => {
+          setHighlightedItemId(null);
+        }, 2500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, []);
 
   // Effect to fetch all logs when items change.
   // This is a bit "N+1" but local DB is fast.
@@ -153,10 +173,15 @@ export default function Home() {
           // Restore scroll position
           const savedScrollY = sessionStorage.getItem('ago-list-scroll-y');
           if (savedScrollY) {
+            isRestoringScroll.current = true;
             window.scrollTo({
               top: parseInt(savedScrollY, 10),
               behavior: 'instant'
             });
+            // Brief delay to allow the scroll event to fire before we start saving again
+            setTimeout(() => {
+              isRestoringScroll.current = false;
+            }, 100);
           }
         }
       }, 100);

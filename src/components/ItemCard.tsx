@@ -263,6 +263,10 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
         // Only navigate if we didn't just perform a drag action
         const dragDist = Math.abs(dragInfo.current.currentX - dragInfo.current.startX);
         if (dragDist < 5) {
+            // Save item ID for scroll restoration and highlighting
+            if (typeof window !== 'undefined') {
+                sessionStorage.setItem('ago-last-viewed-id', item.id);
+            }
             router.push(`/items/${item.id}`);
         }
     };
