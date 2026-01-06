@@ -146,14 +146,22 @@ export default function ItemDetailPage() {
                         </button>
                     </div>
 
-                    <div className="flex justify-between items-baseline">
+                    <div className="flex justify-between items-start">
                         <div className="flex-1 min-w-0 pr-4">
-                            <h1 className="text-2xl font-bold leading-tight tracking-[-0.3px] text-text-primary dark:text-white mb-2">
+                            <h1 className="text-2xl font-bold leading-tight tracking-[-0.3px] text-text-primary dark:text-white mb-2 line-clamp-3">
                                 {item.title}
                             </h1>
                             {category && (
                                 <span 
-                                    className="inline-block px-[14px] py-1.5 rounded-full text-[13px] font-semibold uppercase tracking-wider bg-bg-blue-tint text-primary-blue"
+                                    className="inline-block px-[14px] py-1.5 rounded-full text-[13px] font-semibold uppercase tracking-wider"
+                                    style={categoryStyles ? {
+                                        color: categoryStyles.color,
+                                        backgroundColor: categoryStyles.backgroundColor,
+                                        border: isDarkMode ? `1px solid ${categoryStyles.color}20` : 'none'
+                                    } : {
+                                        color: isDarkMode ? '#9CA3AF' : '#6B7280',
+                                        backgroundColor: isDarkMode ? '#1F2937' : '#F3F4F6'
+                                    }}
                                 >
                                     {category.name}
                                 </span>
@@ -164,7 +172,7 @@ export default function ItemDetailPage() {
                             <p className="text-[56px] font-extrabold leading-none tracking-[-1px] text-primary-blue">
                                 {lastLog ? daysAgo : '--'}
                             </p>
-                            <p className="text-xs mt-1 text-text-secondary dark:text-text-secondary">
+                            <p className="text-xs -mt-1 text-text-secondary dark:text-text-secondary">
                                 days ago
                             </p>
                         </div>
