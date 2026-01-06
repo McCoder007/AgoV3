@@ -5,7 +5,8 @@ import { Item } from '@/lib/types';
 import { useLastLog } from '@/hooks/useData';
 import { useDataContext } from '@/contexts/DataContext';
 import { diffDaysDateOnly, getTodayDateString, formatDisplayDate } from '@/lib/dateUtils';
-import { getCategoryStyles, getSwipeGradient } from '@/lib/colorUtils';
+import { getSwipeGradient } from '@/lib/colorUtils';
+import { CategoryPill } from '@/components/CategoryPill';
 import { Check, Undo2 } from 'lucide-react';
 import Link from 'next/link';
 import { logsRepo } from '@/lib/storage/logsRepo';
@@ -90,7 +91,6 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
 
     const category = categories.find(c => c.id === item.categoryId);
     const categoryName = category?.name || 'Uncategorized';
-    const categoryStyles = category?.color ? getCategoryStyles(category.color, isDarkMode) : null;
     const swipeGradient = getSwipeGradient(category?.color);
 
     const triggerCompletion = useCallback(async () => {
@@ -389,19 +389,7 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
                             {item.title}
                         </h3>
                         <div className="flex items-center gap-2 mt-2">
-                            <span
-                                className="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
-                                style={categoryStyles ? {
-                                    color: categoryStyles.color,
-                                    backgroundColor: categoryStyles.backgroundColor,
-                                    border: isDarkMode ? `1px solid ${categoryStyles.color}20` : 'none'
-                                } : {
-                                    color: isDarkMode ? '#9CA3AF' : '#6B7280',
-                                    backgroundColor: isDarkMode ? '#1F2937' : '#F3F4F6'
-                                }}
-                            >
-                                {categoryName}
-                            </span>
+                            <CategoryPill categoryName={categoryName} isDark={isDarkMode} />
                             {lastLog && (
                                 <span className="text-[13px] font-medium text-gray-400 dark:text-gray-500">
                                     {formatDisplayDate(lastLog.date)}

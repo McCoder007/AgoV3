@@ -18,7 +18,7 @@ const EditItemSheet = dynamic(
 import { logsRepo } from '@/lib/storage/logsRepo';
 import { getTodayDateString, diffDaysDateOnly, parseDateOnly } from '@/lib/dateUtils';
 import { LogEntry } from '@/lib/types';
-import { getCategoryStyles } from '@/lib/colorUtils';
+import { CategoryPill } from '@/components/CategoryPill';
 import Link from 'next/link';
 import { ChevronLeft, Pencil, Clock, Check } from 'lucide-react';
 import { useMemo } from 'react';
@@ -53,7 +53,6 @@ export default function ItemDetailPage() {
 
     const item = items.find(i => i.id === id);
     const category = categories.find(c => c.id === item?.categoryId);
-    const categoryStyles = category?.color ? getCategoryStyles(category.color, isDarkMode) : null;
     const lastLog = logs[0]; // logs are sorted desc by date
     const today = getTodayDateString();
     const daysAgo = lastLog ? diffDaysDateOnly(today, lastLog.date) : 0;
@@ -153,19 +152,7 @@ export default function ItemDetailPage() {
                                 {item.title}
                             </h1>
                             {category && (
-                                <span
-                                    className="inline-block px-[14px] py-1.5 rounded-full text-[13px] font-semibold uppercase tracking-wider"
-                                    style={categoryStyles ? {
-                                        color: categoryStyles.color,
-                                        backgroundColor: categoryStyles.backgroundColor,
-                                        border: isDarkMode ? `1px solid ${categoryStyles.color}20` : 'none'
-                                    } : {
-                                        color: isDarkMode ? '#9CA3AF' : '#6B7280',
-                                        backgroundColor: isDarkMode ? '#1F2937' : '#F3F4F6'
-                                    }}
-                                >
-                                    {category.name}
-                                </span>
+                                <CategoryPill categoryName={category.name} isDark={isDarkMode} />
                             )}
                         </div>
 

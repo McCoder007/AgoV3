@@ -116,3 +116,104 @@ body {
 .dark .modal-shadow {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
+
+/* Category Pill Base Styles - MUST BE IDENTICAL everywhere (reduced by 25%) */
+.category-pill {
+  /* Typography */
+  font-size: 9.75px;
+  font-weight: 600;
+  letter-spacing: 0.225px;
+  text-transform: uppercase;
+  
+  /* Spacing */
+  padding: 4.5px 10.5px;
+  
+  /* Shape */
+  border-radius: 4.5px;
+  
+  /* Display */
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* Dark mode colors */
+@media (prefers-color-scheme: dark) {
+  .category-pill.car {
+    background: rgba(0, 168, 150, 0.25);
+    color: #00CCA8;
+  }
+  
+  .category-pill.personal {
+    background: rgba(0, 204, 136, 0.25);
+    color: #00E88C;
+  }
+  
+  .category-pill.home {
+    background: rgba(66, 135, 245, 0.25);
+    color: #5B9FFF;
+  }
+  
+  .category-pill.test4 {
+    background: rgba(139, 92, 246, 0.25);
+    color: #A78BFA;
+  }
+  
+  .category-pill.test5 {
+    background: rgba(236, 72, 153, 0.25);
+    color: #F472B6;
+  }
+}
+
+/* Light mode colors */
+@media (prefers-color-scheme: light) {
+  .category-pill.car {
+    background: rgba(0, 143, 122, 0.15);
+    color: #006B5C;
+  }
+  
+  .category-pill.personal {
+    background: rgba(0, 170, 112, 0.15);
+    color: #008555;
+  }
+  
+  .category-pill.home {
+    background: rgba(48, 108, 196, 0.15);
+    color: #285399;
+  }
+  
+  .category-pill.test4 {
+    background: rgba(109, 72, 196, 0.15);
+    color: #543A99;
+  }
+  
+  .category-pill.test5 {
+    background: rgba(196, 56, 122, 0.15);
+    color: #992B5F;
+  }
+}
+
+/* Dark mode class-based (for when .dark class is used instead of prefers-color-scheme) */
+.dark .category-pill.car {
+  background: rgba(0, 168, 150, 0.25);
+  color: #00CCA8;
+}
+
+.dark .category-pill.personal {
+  background: rgba(0, 204, 136, 0.25);
+  color: #00E88C;
+}
+
+.dark .category-pill.home {
+  background: rgba(66, 135, 245, 0.25);
+  color: #5B9FFF;
+}
+
+.dark .category-pill.test4 {
+  background: rgba(139, 92, 246, 0.25);
+  color: #A78BFA;
+}
+
+.dark .category-pill.test5 {
+  background: rgba(236, 72, 153, 0.25);
+  color: #F472B6;
+}

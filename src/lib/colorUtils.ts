@@ -296,6 +296,69 @@ export function getCategoryPillClasses(
 }
 
 /**
+ * Semantic color mapping for category pills
+ * Maps category names to predefined colors for consistent appearance
+ */
+const SEMANTIC_COLORS: Record<string, { dark: { bg: string; text: string }; light: { bg: string; text: string } }> = {
+  car: {
+    dark: { bg: 'rgba(0, 168, 150, 0.25)', text: '#00CCA8' },
+    light: { bg: 'rgba(0, 143, 122, 0.15)', text: '#006B5C' }
+  },
+  personal: {
+    dark: { bg: 'rgba(0, 204, 136, 0.25)', text: '#00E88C' },
+    light: { bg: 'rgba(0, 170, 112, 0.15)', text: '#008555' }
+  },
+  home: {
+    dark: { bg: 'rgba(66, 135, 245, 0.25)', text: '#5B9FFF' },
+    light: { bg: 'rgba(48, 108, 196, 0.15)', text: '#285399' }
+  },
+  test4: {
+    dark: { bg: 'rgba(139, 92, 246, 0.25)', text: '#A78BFA' },
+    light: { bg: 'rgba(109, 72, 196, 0.15)', text: '#543A99' }
+  },
+  test5: {
+    dark: { bg: 'rgba(236, 72, 153, 0.25)', text: '#F472B6' },
+    light: { bg: 'rgba(196, 56, 122, 0.15)', text: '#992B5F' }
+  }
+};
+
+/**
+ * Get semantic colors for a category based on its name
+ * Returns predefined colors for known categories, or gray fallback for unknown categories
+ * @param categoryName - The category name (case-insensitive)
+ * @param isDark - Whether dark mode is active
+ * @returns Object with backgroundColor and color properties
+ */
+export function getSemanticCategoryColors(
+  categoryName: string,
+  isDark: boolean
+): { backgroundColor: string; color: string } {
+  const normalizedName = categoryName.toLowerCase().trim();
+  const colors = SEMANTIC_COLORS[normalizedName];
+  
+  if (colors) {
+    const modeColors = isDark ? colors.dark : colors.light;
+    return {
+      backgroundColor: modeColors.bg,
+      color: modeColors.text
+    };
+  }
+  
+  // Fallback to gray for unmapped categories
+  if (isDark) {
+    return {
+      backgroundColor: '#1F2937',
+      color: '#9CA3AF'
+    };
+  } else {
+    return {
+      backgroundColor: '#F3F4F6',
+      color: '#6B7280'
+    };
+  }
+}
+
+/**
  * Generate a swipe gradient from a category color
  * Creates a gradient that transitions from the category color to a very light tint
  * @param color - The category color (hex string) or undefined
