@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { X, Trash2, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { CategoryPicker } from '@/components/CategoryPicker';
@@ -35,14 +35,53 @@ export function EditItemSheet({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
+  
+  const inputRef = useRef<HTMLInputElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setTitle(initialTitle);
       setCategoryId(initialCategoryId);
       setShowDeleteConfirm(false);
+      setShouldRender(true);
+      const timer = setTimeout(() => {
+        setIsAnimating(true);
+      }, 10);
+      return () => clearTimeout(timer);
+    } else {
+      setIsAnimating(false);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 300);
+      return () => clearTimeout(timer);
     }
   }, [isOpen, initialTitle, initialCategoryId]);
+
+  // Focus management
+  useEffect(() => {
+    if (isAnimating && isOpen) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isAnimating, isOpen]);
+
+  // Handle Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
 
   const isChanged = title.trim() !== initialTitle || categoryId !== initialCategoryId;
 
@@ -57,7 +96,7 @@ export function EditItemSheet({
     return [...recent, ...others].slice(0, 8);
   }, [categories, recentIds]);
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   const handleSubmit = async () => {
     if (!title.trim() || !categoryId) return;
@@ -94,72 +133,94 @@ export function EditItemSheet({
   };
 
   return (
-    <>
-      {/* Backdrop */}
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center p-5"
+      role="dialog"
+      aria-modal="true"
+    >
       <div
-        className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm z-[55] transition-opacity"
+        className={clsx(
+          "fixed inset-0 transition-opacity duration-300",
+          isAnimating ? "opacity-100" : "opacity-0"
+        )}
+        style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(4px)' }}
         onClick={onClose}
       />
 
-      {/* Bottom Sheet */}
-      <div className="fixed inset-x-0 bottom-0 z-[60] bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl transform transition-transform duration-300 ease-out h-[92vh] flex flex-col">
-        {/* Handle bar */}
-        <div className="flex justify-center pt-4 pb-2">
-          <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full" />
-        </div>
-
+      <div
+        ref={sheetRef}
+        className={clsx(
+          "relative w-full max-w-[500px] bg-white dark:bg-[#1e2530] rounded-[24px] flex flex-col transition-all duration-300 ease-out max-h-[90vh] modal-shadow",
+          isAnimating ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+        )}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pb-6 border-b border-gray-200 dark:border-gray-800">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Item</h2>
+        <div className="flex items-start justify-between px-8 pt-8 pb-0 shrink-0">
+          <h2 className="text-[28px] font-bold leading-tight text-[#1a1f2e] dark:text-white mb-8" style={{ letterSpacing: '-0.5px' }}>
+            Edit Item
+          </h2>
           <button
             onClick={onClose}
-            className="p-2 -mr-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+            className="w-10 h-10 rounded-xl bg-[#f5f7fa] dark:bg-[#2a3142] text-[#6b7280] dark:text-[#9ca3af] flex items-center justify-center transition-all duration-200 hover:bg-[#e5e7eb] dark:hover:bg-[#3a4152] hover:rotate-90"
+            aria-label="Close"
           >
-            <X size={24} />
+            <span className="text-2xl leading-none" style={{ fontSize: '24px' }}>✕</span>
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-8">
-          <div className="space-y-10">
-            <div className="space-y-4">
-              <label htmlFor="edit-title" className="block text-base font-semibold text-gray-700 dark:text-gray-300">
-                Item Name
+        {/* Scrollable Content */}
+        <div 
+          ref={contentRef}
+          className="flex-1 overflow-y-auto px-8"
+          style={{ scrollbarWidth: 'thin' }}
+        >
+          <div className="pb-8">
+            {/* Item Name */}
+            <div className="mb-7">
+              <label htmlFor="edit-title" className="block text-[13px] font-semibold uppercase mb-3 text-[#6b7280] dark:text-[#9ca3af]" style={{ letterSpacing: '0.5px' }}>
+                ITEM NAME
               </label>
               <input
+                ref={inputRef}
                 type="text"
                 id="edit-title"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                className="w-full px-4 py-4 text-xl rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                className="w-full px-5 py-4 text-base rounded-2xl border-none bg-[#f5f7fa] dark:bg-[#2a3142] text-[#1a1f2e] dark:text-white outline-none transition-all duration-200 focus:-translate-y-0.5 focus:shadow-[0_4px_12px_rgba(59,130,246,0.15),inset_0_2px_4px_rgba(0,0,0,0.04)] dark:focus:shadow-[0_4px_12px_rgba(59,130,246,0.25),inset_0_2px_4px_rgba(0,0,0,0.2)]"
+                style={{ boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.04)' }}
                 autoFocus
               />
             </div>
 
-            <div className="space-y-4">
-              <label className="block text-base font-semibold text-gray-700 dark:text-gray-300">
-                Category
+            {/* Category Chips */}
+            <div className="mb-7">
+              <label className="block text-[13px] font-semibold uppercase mb-3 text-[#6b7280] dark:text-[#9ca3af]" style={{ letterSpacing: '0.5px' }}>
+                CATEGORY
               </label>
-              <div className="grid grid-cols-3 gap-2">
-                {displayCategories.map(cat => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setCategoryId(categoryId === cat.id ? '' : cat.id)}
-                    className={clsx(
-                      "w-full h-11 px-2 rounded-xl text-sm font-medium transition-all flex items-center justify-center border",
-                      categoryId === cat.id
-                        ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-sm"
-                        : "bg-white text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                    )}
-                  >
-                    <span className="truncate">{cat.name}</span>
-                  </button>
-                ))}
+              <div className="grid grid-cols-3 gap-2.5">
+                {displayCategories.map(cat => {
+                  const isSelected = categoryId === cat.id;
+                  const categoryColor = cat.color || '#6b7280';
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setCategoryId(isSelected ? '' : cat.id)}
+                      className={clsx(
+                        "w-full py-3 px-4 rounded-xl text-sm font-semibold text-center border-none cursor-pointer transition-all duration-200 hover:-translate-y-0.5",
+                        isSelected ? "text-white" : "bg-[#f5f7fa] dark:bg-[#2a3142] text-[#6b7280] dark:text-[#9ca3af]"
+                      )}
+                      style={isSelected ? { backgroundColor: categoryColor } : {}}
+                    >
+                      <span className="truncate block">{cat.name}</span>
+                    </button>
+                  );
+                })}
                 <button
                   type="button"
                   onClick={() => setIsPickerOpen(true)}
-                  className="w-full h-11 px-2 rounded-xl text-sm font-medium transition-all flex items-center justify-center border bg-gray-50 text-gray-500 border-dashed border-gray-300 dark:bg-gray-900 dark:text-gray-400 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="w-full py-3 px-4 rounded-xl text-sm font-semibold text-center bg-transparent border-2 border-dashed border-[#d1d5db] dark:border-[#4b5563] text-[#6b7280] dark:text-[#9ca3af] cursor-pointer transition-all duration-200 hover:-translate-y-0.5"
                 >
                   More...
                 </button>
@@ -167,33 +228,34 @@ export function EditItemSheet({
             </div>
 
             {/* Danger Zone */}
-            <div className="pt-10 pb-20">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
-                <span className="text-[10px] font-bold uppercase tracking-[2px] text-red-500/60 dark:text-red-400/50">Danger Zone</span>
-                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+            <div className="mt-10">
+              <div className="text-center mb-4">
+                <span className="text-[11px] font-bold uppercase text-[#ef4444]" style={{ letterSpacing: '1px' }}>
+                  DANGER ZONE
+                </span>
               </div>
               
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-2xl border-2 border-red-100 dark:border-red-900/20 text-red-600 dark:text-red-400 font-bold hover:bg-red-50 dark:hover:bg-red-900/10 transition-all active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-base font-semibold border-2 bg-transparent text-[#ef4444] border-[#fecaca] dark:border-[rgba(239,68,68,0.3)] cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#fef2f2] dark:hover:bg-[rgba(239,68,68,0.1)] hover:border-[#fca5a5] dark:hover:border-[rgba(239,68,68,0.5)] mb-6"
               >
                 <Trash2 size={20} />
                 Delete Item
               </button>
             </div>
-          </div>
-        </div>
 
-        {/* Pinned Footer */}
-        <div className="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] border-t border-gray-100 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
-          <button
-            onClick={handleSubmit}
-            disabled={isSubmitting || !title.trim() || !categoryId || !isChanged}
-            className="w-full px-6 py-5 rounded-2xl bg-blue-600 dark:bg-blue-500 text-white text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 dark:hover:bg-blue-600 transition-all shadow-lg active:scale-[0.98]"
-          >
-            {isSubmitting ? 'Saving...' : 'Save Changes'}
-          </button>
+            {/* Save Changes Button */}
+            <div className="mt-6">
+              <button
+                onClick={handleSubmit}
+                disabled={isSubmitting || !title.trim() || !categoryId || !isChanged}
+                className="w-full py-4 px-4 rounded-2xl text-base font-semibold border-none cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#3b82f6] text-white hover:bg-[#2563eb] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(59,130,246,0.4)]"
+                style={{ boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)' }}
+              >
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -204,22 +266,22 @@ export function EditItemSheet({
             className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={() => setShowDeleteConfirm(false)}
           />
-          <div className="relative bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all animate-in fade-in zoom-in duration-200">
+          <div className="relative bg-white dark:bg-[#1e2530] rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all animate-in fade-in zoom-in duration-200 modal-shadow">
             <div className="p-8 text-center">
               <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <AlertTriangle size={32} className="text-red-600 dark:text-red-500" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              <h3 className="text-xl font-bold text-[#1a1f2e] dark:text-white mb-2">
                 Delete "{initialTitle}"?
               </h3>
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="text-[#6b7280] dark:text-[#9ca3af]">
                 This removes the item and its history. This action cannot be undone.
               </p>
             </div>
             <div className="flex border-t border-gray-100 dark:border-gray-800">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 px-6 py-5 text-gray-600 dark:text-gray-400 font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                className="flex-1 px-6 py-5 text-[#6b7280] dark:text-[#9ca3af] font-bold hover:bg-[#f5f7fa] dark:hover:bg-[#2a3142] transition-colors"
               >
                 Cancel
               </button>
@@ -246,7 +308,7 @@ export function EditItemSheet({
           onCategoryCreated?.();
         }}
       />
-    </>
+    </div>
   );
 }
 
