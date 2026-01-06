@@ -67,3 +67,25 @@ export function getTodayDateString(): string {
     const day = String(now.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 }
+
+/**
+ * Formats a date string for display (e.g., "Jan 2" or "Jan 2, 2024").
+ * Adds the year if the date is more than thresholdDays ago.
+ */
+export function formatDisplayDate(dateStr: string, thresholdDays: number = 280): string {
+    const date = parseDateOnly(dateStr);
+    const today = parseDateOnly(getTodayDateString());
+    const diff = diffDaysDateOnly(getTodayDateString(), dateStr);
+    
+    const options: Intl.DateTimeFormatOptions = {
+        month: 'short',
+        day: 'numeric',
+    };
+
+    // Add year if more than 280 days ago OR if from a different year
+    if (diff > thresholdDays || date.getFullYear() !== today.getFullYear()) {
+        options.year = 'numeric';
+    }
+
+    return date.toLocaleDateString('en-US', options);
+}

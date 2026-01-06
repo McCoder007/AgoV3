@@ -102,6 +102,17 @@ export default function ItemDetailPage() {
         return `${years}y ${remainingDays}d ago`;
     };
 
+    // Format stat value (Average/Shortest)
+    const formatStatValue = (value: number) => {
+        if (value === 0) return '-';
+        
+        return (
+            <>
+                {value}<span className="text-xs ml-1 opacity-70">{value === 1 ? 'day' : 'days'}</span>
+            </>
+        );
+    };
+
     if (itemsLoading) return (
         <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black text-gray-400">
             <div className="animate-pulse font-sans">Loading...</div>
@@ -155,7 +166,9 @@ export default function ItemDetailPage() {
                     {/* Stats Row */}
                     <div className="mt-5 flex gap-3 p-4 rounded-2xl bg-white dark:bg-[#1c1c1e] border border-border-color dark:border-border-color">
                         <div className="flex-1 text-center py-2">
-                            <p className="text-xl font-bold text-text-primary dark:text-white mb-1">{stats.average}</p>
+                            <p className="text-xl font-bold text-text-primary dark:text-white mb-1 flex items-baseline justify-center">
+                                {formatStatValue(stats.average)}
+                            </p>
                             <p className="text-[11px] font-bold uppercase tracking-[0.5px] text-text-tertiary dark:text-text-secondary">Average</p>
                         </div>
                         <div className="flex-1 text-center py-2">
@@ -163,7 +176,9 @@ export default function ItemDetailPage() {
                             <p className="text-[11px] font-bold uppercase tracking-[0.5px] text-text-tertiary dark:text-text-secondary">Total</p>
                         </div>
                         <div className="flex-1 text-center py-2">
-                            <p className="text-xl font-bold text-text-primary dark:text-white mb-1">{stats.shortest}</p>
+                            <p className="text-xl font-bold text-text-primary dark:text-white mb-1 flex items-baseline justify-center">
+                                {formatStatValue(stats.shortest)}
+                            </p>
                             <p className="text-[11px] font-bold uppercase tracking-[0.5px] text-text-tertiary dark:text-text-secondary">Shortest</p>
                         </div>
                     </div>
