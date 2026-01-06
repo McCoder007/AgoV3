@@ -23,7 +23,6 @@ export default function Home() {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [scrollY, setScrollY] = useState(0);
   const headerRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { 
     isFilterSheetOpen, 
     isSortSheetOpen, 
@@ -50,15 +49,12 @@ export default function Home() {
 
   // Track scroll position for header shadow
   useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
     const handleScroll = () => {
-      setScrollY(container.scrollTop);
+      setScrollY(window.scrollY);
     };
 
-    container.addEventListener('scroll', handleScroll, { passive: true });
-    return () => container.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // We need to sort items by "most recently done".
@@ -185,11 +181,11 @@ export default function Home() {
   const sortActive = sortMethod !== 'recently-done';
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-white dark:bg-background">
+    <div className="flex flex-col h-full min-h-[100dvh] bg-white dark:bg-background">
       {/* Fixed Header */}
       <div 
         ref={headerRef}
-        className={`flex-none z-30 ago-sticky-header bg-white dark:bg-background transition-shadow ${
+        className={`sticky top-0 z-30 ago-sticky-header bg-white dark:bg-background transition-shadow ${
           scrollY > 0 ? 'shadow-sm border-b border-gray-100 dark:border-gray-800' : ''
         }`}
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
@@ -220,14 +216,10 @@ export default function Home() {
       </div>
 
       {/* Content Area - with padding for header and FAB */}
-      <div 
-        ref={scrollContainerRef}
-        className="flex-1 px-3 py-2 space-y-2 overflow-y-auto" 
-        style={{ 
-          paddingTop: '0.5rem',
-          paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))'
-        }}
-      >
+      <div className="flex-1 px-3 py-2 space-y-2" style={{ 
+        paddingTop: '0.5rem',
+        paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))'
+      }}>
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-6">
             <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
@@ -270,7 +262,7 @@ export default function Home() {
       {/* Floating Action Button */}
       <button
         onClick={openNewItemSheet}
-        className="absolute z-20 flex items-center justify-center w-14 h-14 rounded-full bg-black dark:bg-white text-white dark:text-black shadow-lg hover:shadow-xl transition-all active:scale-95"
+        className="fixed z-20 flex items-center justify-center w-14 h-14 rounded-full bg-black dark:bg-white text-white dark:text-black shadow-lg hover:shadow-xl transition-all active:scale-95"
         style={{
           bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
           right: '16px',

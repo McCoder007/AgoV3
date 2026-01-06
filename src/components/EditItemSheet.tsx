@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { X } from 'lucide-react';
+import { X, Trash2, AlertTriangle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { CategoryPicker } from '@/components/CategoryPicker';
 import { itemsRepo } from '@/lib/storage/itemsRepo';
 import { recentCategoriesRepo } from '@/lib/storage/recentCategories';
@@ -25,18 +26,23 @@ export function EditItemSheet({
   initialCategoryId,
   onSave,
 }: EditItemSheetProps) {
+  const router = useRouter();
   const { categories, reload: reloadCategories } = useCategories();
   const [title, setTitle] = useState(initialTitle);
   const [categoryId, setCategoryId] = useState(initialCategoryId);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setTitle(initialTitle);
       setCategoryId(initialCategoryId);
+      setShowDeleteConfirm(false);
     }
   }, [isOpen, initialTitle, initialCategoryId]);
+
+  const isChanged = title.trim() !== initialTitle || categoryId !== initialCategoryId;
 
   // Category Chips logic
   const recentIds = useMemo(() => recentCategoriesRepo.getRecentIds(), [isOpen]);
@@ -72,6 +78,19 @@ export function EditItemSheet({
     }
   };
 
+  const handleDelete = async () => {
+    setIsSubmitting(true);
+    try {
+      await itemsRepo.delete(itemId);
+      onClose();
+      router.replace('/');
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <>
       {/* Backdrop */}
@@ -99,7 +118,7 @@ export function EditItemSheet({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-8 pb-40">
+        <div className="flex-1 overflow-y-auto px-6 py-8">
           <div className="space-y-10">
             <div className="space-y-4">
               <label htmlFor="edit-title" className="block text-base font-semibold text-gray-700 dark:text-gray-300">
@@ -145,18 +164,73 @@ export function EditItemSheet({
               </div>
             </div>
 
-            <div className="pt-4">
+            {/* Danger Zone */}
+            <div className="pt-10 pb-20">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+                <span className="text-[10px] font-bold uppercase tracking-[2px] text-red-500/60 dark:text-red-400/50">Danger Zone</span>
+                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+              </div>
+              
               <button
-                onClick={handleSubmit}
-                disabled={isSubmitting || !title.trim() || !categoryId}
-                className="w-full px-6 py-5 rounded-2xl bg-blue-600 dark:bg-blue-500 text-white text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 dark:hover:bg-blue-600 transition-all shadow-lg active:scale-[0.98]"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-2xl border-2 border-red-100 dark:border-red-900/20 text-red-600 dark:text-red-400 font-bold hover:bg-red-50 dark:hover:bg-red-900/10 transition-all active:scale-[0.98]"
               >
-                {isSubmitting ? 'Saving...' : 'Save Changes'}
+                <Trash2 size={20} />
+                Delete Item
               </button>
             </div>
           </div>
         </div>
+
+        {/* Pinned Footer */}
+        <div className="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] border-t border-gray-100 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting || !title.trim() || !categoryId || !isChanged}
+            className="w-full px-6 py-5 rounded-2xl bg-blue-600 dark:bg-blue-500 text-white text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 dark:hover:bg-blue-600 transition-all shadow-lg active:scale-[0.98]"
+          >
+            {isSubmitting ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => setShowDeleteConfirm(false)}
+          />
+          <div className="relative bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all animate-in fade-in zoom-in duration-200">
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <AlertTriangle size={32} className="text-red-600 dark:text-red-500" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                Delete "{initialTitle}"?
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                This removes the item and its history. This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex border-t border-gray-100 dark:border-gray-800">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 px-6 py-5 text-gray-600 dark:text-gray-400 font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="flex-1 px-6 py-5 bg-red-600 dark:bg-red-500 text-white font-bold hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <CategoryPicker
         isOpen={isPickerOpen}

@@ -5,14 +5,14 @@ import { useParams } from 'next/navigation';
 import { useItems, useCategories, useItemLogs } from '@/hooks/useData';
 import { HistoryList } from '@/components/HistoryList';
 import { EditLogModal } from '@/components/EditLogModal';
-import { ItemActionsSheet } from '@/components/ItemActionsSheet';
 import { EditItemSheet } from '@/components/EditItemSheet';
 import { logsRepo } from '@/lib/storage/logsRepo';
 import { getTodayDateString, diffDaysDateOnly, parseDateOnly } from '@/lib/dateUtils';
 import { LogEntry } from '@/lib/types';
 import { getCategoryStyles } from '@/lib/colorUtils';
 import Link from 'next/link';
-import { ChevronLeft, MoreVertical, Clock, Check } from 'lucide-react';
+import { ChevronLeft, Pencil, Clock, Check } from 'lucide-react';
+import { useMemo } from 'react';
 
 export default function ItemDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -21,10 +21,8 @@ export default function ItemDetailPage() {
     const { logs, reload: reloadLogs } = useItemLogs(id);
 
     const [editingLog, setEditingLog] = useState<LogEntry | null>(null);
-    const [isActionsSheetOpen, setIsActionsSheetOpen] = useState(false);
     const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
-    const menuButtonRef = useRef<HTMLButtonElement>(null);
 
     // Detect dark mode
     useEffect(() => {
@@ -49,6 +47,24 @@ export default function ItemDetailPage() {
     const lastLog = logs[0]; // logs are sorted desc by date
     const today = getTodayDateString();
     const daysAgo = lastLog ? diffDaysDateOnly(today, lastLog.date) : 0;
+
+    // Calculate statistics
+    const stats = useMemo(() => {
+        if (logs.length === 0) return { average: 0, total: 0, shortest: 0 };
+        if (logs.length === 1) return { average: 0, total: 1, shortest: 0 };
+        
+        const gaps: number[] = [];
+        for (let i = 0; i < logs.length - 1; i++) {
+            // logs are sorted desc, so logs[i] is newer than logs[i+1]
+            gaps.push(diffDaysDateOnly(logs[i].date, logs[i + 1].date));
+        }
+        
+        const totalGap = gaps.reduce((sum, gap) => sum + gap, 0);
+        const average = Math.round(totalGap / gaps.length);
+        const shortest = Math.min(...gaps);
+        
+        return { average, total: logs.length, shortest };
+    }, [logs]);
 
     const handleLogClick = (log: LogEntry) => {
         setEditingLog(log);
@@ -87,129 +103,101 @@ export default function ItemDetailPage() {
     };
 
     if (itemsLoading) return (
-        <div className="flex items-center justify-center min-h-screen bg-white dark:bg-background text-gray-400">
-            <div className="animate-pulse">Loading...</div>
+        <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black text-gray-400">
+            <div className="animate-pulse font-sans">Loading...</div>
         </div>
     );
-    if (!item) return <div className="p-10 text-center">Item not found</div>;
+    if (!item) return <div className="p-10 text-center font-sans">Item not found</div>;
 
     return (
-        <div className="flex flex-col h-full overflow-hidden bg-white dark:bg-background">
-            {/* Page Header - minimal */}
-            <header className="flex-none z-30 bg-white/90 dark:bg-background/90 backdrop-blur-xl px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] flex items-center justify-between">
-                <Link href="/" className="p-2 -ml-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                    <ChevronLeft size={24} />
-                </Link>
-            </header>
-
-            <main className="flex-1 px-5 py-4 pb-24 space-y-8 overflow-y-auto">
-                {/* Hero Section - Title, Category Chip */}
-                <section className="space-y-2">
-                    <div className="flex items-start justify-between gap-4">
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex-1">
-                            {item.title}
-                        </h1>
+        <div className="flex flex-col min-h-[100dvh] bg-white dark:bg-black font-sans">
+            {/* Header Section */}
+            <header className="flex flex-col">
+                <div className="px-6 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-5 border-b border-border-color dark:border-border-color bg-linear-to-b from-[#f8fafb] to-white dark:from-[#1c1c1e] dark:to-black">
+                    <div className="flex justify-between items-center mb-5">
+                        <Link href="/" className="text-[15px] font-semibold text-primary-blue">
+                            ← Back
+                        </Link>
                         <button
-                            ref={menuButtonRef}
-                            onClick={() => setIsActionsSheetOpen(true)}
-                            className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors -mt-1"
+                            onClick={() => setIsEditSheetOpen(true)}
+                            className="flex items-center justify-center min-w-[44px] min-h-[44px] -mr-2 text-text-secondary dark:text-text-secondary hover:text-text-primary dark:hover:text-white transition-colors"
                         >
-                            <MoreVertical size={24} />
+                            <Pencil size={20} />
                         </button>
                     </div>
-                    {category && (
-                        <span 
-                            className="inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider"
-                            style={categoryStyles ? { 
-                                backgroundColor: categoryStyles.backgroundColor,
-                                color: categoryStyles.color,
-                                border: isDarkMode ? `1px solid ${categoryStyles.color}20` : 'none'
-                            } : {
-                                backgroundColor: isDarkMode ? '#1f2937' : '#f3f4f6',
-                                color: isDarkMode ? '#9ca3af' : '#6b7280'
-                            }}
-                        >
-                            {category.name}
-                        </span>
-                    )}
-                </section>
 
-                {/* Last Done Stat Row */}
-                <section>
-                    <div className="border border-gray-200 dark:border-gray-800 rounded-2xl px-6 py-5 bg-white dark:bg-gray-900/50 shadow-sm">
-                        <div className="flex items-center justify-between gap-4">
-                            {/* Left side: Label, Value, Date */}
-                            <div className="flex-1 min-w-0">
-                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Last done</p>
-                                <p className="text-blue-600 dark:text-blue-400 text-3xl font-bold mb-1">
-                                    {lastLog ? formatDaysAgo(daysAgo) : 'Never'}
-                                </p>
-                                {lastLog && (
-                                    <p className="text-gray-500 dark:text-gray-400 text-sm">
-                                        {parseDateOnly(lastLog.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                                    </p>
-                                )}
+                    <div className="flex justify-between items-start">
+                        <div className="flex-1 min-w-0 pr-4">
+                            <div className="flex items-start justify-between gap-4 mb-2">
+                                <h1 className="text-2xl font-bold leading-tight tracking-[-0.3px] text-text-primary dark:text-white">
+                                    {item.title}
+                                </h1>
                             </div>
-
-                            {/* Right side: Check button */}
-                            <div className="flex items-center shrink-0">
-                                {/* Primary Check Button */}
-                                <button
-                                    onClick={handleDone}
-                                    disabled={daysAgo === 0}
-                                    className="flex items-center justify-center rounded-full transition-all w-12 h-12 focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-[0.98] disabled:cursor-default"
-                                    style={daysAgo === 0
-                                        ? {
-                                            backgroundColor: isDarkMode ? 'rgba(156, 163, 175, 0.08)' : 'rgba(156, 163, 175, 0.06)',
-                                            border: `1px solid ${isDarkMode ? 'rgba(156, 163, 175, 0.12)' : 'rgba(156, 163, 175, 0.10)'}`,
-                                            color: isDarkMode ? 'rgba(156, 163, 175, 0.35)' : 'rgba(107, 114, 128, 0.35)'
-                                        }
-                                        : {
-                                            backgroundColor: isDarkMode ? 'rgba(59, 130, 246, 0.18)' : 'rgba(59, 130, 246, 0.10)',
-                                            border: `1px solid ${isDarkMode ? 'rgba(59, 130, 246, 0.27)' : 'rgba(59, 130, 246, 0.21)'}`,
-                                            color: '#3B82F6',
-                                            outlineColor: isDarkMode ? 'rgba(59, 130, 246, 0.40)' : 'rgba(59, 130, 246, 0.40)'
-                                        }
-                                    }
-                                    onMouseEnter={(e) => {
-                                        if (daysAgo !== 0) {
-                                            e.currentTarget.style.backgroundColor = isDarkMode 
-                                                ? 'rgba(59, 130, 246, 0.26)' 
-                                                : 'rgba(59, 130, 246, 0.16)';
-                                        }
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        if (daysAgo !== 0) {
-                                            e.currentTarget.style.backgroundColor = isDarkMode 
-                                                ? 'rgba(59, 130, 246, 0.18)' 
-                                                : 'rgba(59, 130, 246, 0.10)';
-                                        }
-                                    }}
+                            {category && (
+                                <span 
+                                    className="inline-block px-[14px] py-1.5 rounded-full text-[13px] font-semibold uppercase tracking-wider bg-bg-blue-tint text-primary-blue"
                                 >
-                                    <Check size={23} strokeWidth={2.5} />
-                                </button>
-                            </div>
+                                    {category.name}
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="text-right shrink-0">
+                            <p className="text-[56px] font-extrabold leading-none tracking-[-1px] text-primary-blue">
+                                {lastLog ? daysAgo : '--'}
+                            </p>
+                            <p className="text-xs mt-1 text-text-secondary dark:text-text-secondary">
+                                days ago
+                            </p>
                         </div>
                     </div>
+
+                    {/* Stats Row */}
+                    <div className="mt-5 flex gap-3 p-4 rounded-2xl bg-white dark:bg-[#1c1c1e] border border-border-color dark:border-border-color">
+                        <div className="flex-1 text-center py-2">
+                            <p className="text-xl font-bold text-text-primary dark:text-white mb-1">{stats.average}</p>
+                            <p className="text-[11px] font-bold uppercase tracking-[0.5px] text-text-tertiary dark:text-text-secondary">Average</p>
+                        </div>
+                        <div className="flex-1 text-center py-2">
+                            <p className="text-xl font-bold text-text-primary dark:text-white mb-1">{stats.total}</p>
+                            <p className="text-[11px] font-bold uppercase tracking-[0.5px] text-text-tertiary dark:text-text-secondary">Total</p>
+                        </div>
+                        <div className="flex-1 text-center py-2">
+                            <p className="text-xl font-bold text-text-primary dark:text-white mb-1">{stats.shortest}</p>
+                            <p className="text-[11px] font-bold uppercase tracking-[0.5px] text-text-tertiary dark:text-text-secondary">Shortest</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main className="flex-1">
+                {/* Action Section */}
+                <section className="px-6 py-6 bg-white dark:bg-black">
+                    <button
+                        onClick={handleDone}
+                        className="w-full py-[18px] bg-primary-blue text-white rounded-2xl text-[17px] font-semibold flex items-center justify-center gap-2 active:scale-98 transition-all shadow-button dark:shadow-button border-none cursor-pointer"
+                    >
+                        <span className="text-2xl">✓</span>
+                        I Just Did This
+                    </button>
                 </section>
 
                 {/* History Section */}
-                <section className="space-y-4">
-                    <div className="flex items-center gap-[9px] -ml-[3px]">
-                        <Clock size={18} className="text-gray-400 dark:text-gray-500" />
-                        <h3 className="text-base font-bold text-gray-900 dark:text-white">
-                            History
-                        </h3>
-                    </div>
+                <section className="bg-white dark:bg-black">
+                    <h3 className="px-6 pt-6 pb-4 text-xl font-bold text-text-primary dark:text-white">
+                        History
+                    </h3>
 
-                    {logs.length === 0 ? (
-                        <div className="text-center py-12 rounded-2xl border-2 border-dashed border-gray-100 dark:border-gray-900">
-                            <p className="text-sm text-gray-400">No history yet</p>
-                            <p className="text-xs text-gray-500 mt-1">Use the home page to record your first entry</p>
-                        </div>
-                    ) : (
-                        <HistoryList logs={logs} onLogUpdate={reloadLogs} onLogClick={handleLogClick} />
-                    )}
+                    <div className="px-6 pb-24">
+                        {logs.length === 0 ? (
+                            <div className="text-center py-12 rounded-2xl border-2 border-dashed border-border-color dark:border-border-color">
+                                <p className="text-sm text-text-secondary dark:text-text-secondary">No history yet</p>
+                                <p className="text-xs text-text-tertiary mt-1">Record your first entry above</p>
+                            </div>
+                        ) : (
+                            <HistoryList logs={logs} onLogUpdate={reloadLogs} onLogClick={handleLogClick} />
+                        )}
+                    </div>
                 </section>
             </main>
 
@@ -219,16 +207,6 @@ export default function ItemDetailPage() {
                 onClose={() => setEditingLog(null)}
                 log={editingLog}
                 onSave={handleSaveLog}
-            />
-
-            {/* Item Actions Sheet */}
-            <ItemActionsSheet
-                isOpen={isActionsSheetOpen}
-                onClose={() => setIsActionsSheetOpen(false)}
-                itemId={id}
-                itemTitle={item.title}
-                onEdit={() => setIsEditSheetOpen(true)}
-                buttonRef={menuButtonRef}
             />
 
             {/* Edit Item Sheet */}
