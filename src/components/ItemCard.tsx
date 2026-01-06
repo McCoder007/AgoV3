@@ -33,6 +33,7 @@ const CATEGORY_GRADIENTS: Record<string, string> = {
     'Home': 'linear-gradient(90deg, #10B981, #ECFDF5)',
 };
 
+// Trivial change to trigger HMR rebuild
 export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps) {
     const { lastLog, loading, reload } = useLastLog(item.id);
     const { categories } = useCategories();
