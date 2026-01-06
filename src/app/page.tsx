@@ -17,7 +17,7 @@ export default function Home() {
   const { items, loading: itemsLoading, reload: reloadItems } = useItems();
   const { categories, loading: catsLoading } = useCategories();
   const { prefs } = usePreferences();
-  
+
   // Initialize state from sessionStorage if available
   const [selectedCategory, setSelectedCategory] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
@@ -25,14 +25,14 @@ export default function Home() {
     }
     return null;
   });
-  
+
   const [sortMethod, setSortMethod] = useState<SortMethod>(() => {
     if (typeof window !== 'undefined') {
       return (sessionStorage.getItem('ago-sort-method') as SortMethod) || 'recently-done';
     }
     return 'recently-done';
   });
-  
+
   const [searchQuery, setSearchQuery] = useState(() => {
     if (typeof window !== 'undefined') {
       return sessionStorage.getItem('ago-search-query') || '';
@@ -44,17 +44,27 @@ export default function Home() {
   const [scrollY, setScrollY] = useState(0);
   const headerRef = useRef<HTMLDivElement>(null);
   const isRestoringScroll = useRef(false);
-  const { 
-    isFilterSheetOpen, 
-    isSortSheetOpen, 
-    isSettingsSheetOpen, 
+
+  // Track if we need to restore scroll (has saved position) and if restoration is complete
+  const [isScrollRestored, setIsScrollRestored] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedScrollY = sessionStorage.getItem('ago-list-scroll-y');
+      // If there's a saved scroll position > 0, we need to wait for restoration
+      return !savedScrollY || savedScrollY === '0';
+    }
+    return true;
+  });
+  const {
+    isFilterSheetOpen,
+    isSortSheetOpen,
+    isSettingsSheetOpen,
     isNewItemSheetOpen,
-    openFilterSheet, 
-    openSortSheet, 
-    openSettingsSheet, 
+    openFilterSheet,
+    openSortSheet,
+    openSettingsSheet,
     openNewItemSheet,
-    closeFilterSheet, 
-    closeSortSheet, 
+    closeFilterSheet,
+    closeSortSheet,
     closeSettingsSheet,
     closeNewItemSheet
   } = useFilter();
@@ -96,7 +106,7 @@ export default function Home() {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       setScrollY(currentScrollY);
-      
+
       // Don't save if we're at 0 (might be initial load before restoration)
       // or if we're in the middle of restoring
       if (!isRestoringScroll.current && currentScrollY > 0) {
@@ -126,7 +136,7 @@ export default function Home() {
         setHighlightedItemId(lastViewedId);
         // Clear it so it doesn't highlight again on refresh
         sessionStorage.removeItem('ago-last-viewed-id');
-        
+
         // Auto-clear highlight after animation
         const timer = setTimeout(() => {
           setHighlightedItemId(null);
@@ -150,13 +160,13 @@ export default function Home() {
       }
       const logsMap: Record<string, LogEntry[]> = {};
       const lastLogsMap: Record<string, LogEntry | undefined> = {};
-      
+
       await Promise.all(items.map(async (item) => {
         const logs = await logsRepo.listByItem(item.id);
         logsMap[item.id] = logs;
         lastLogsMap[item.id] = logs[0]; // logsRepo.listByItem returns sorted desc by date
       }));
-      
+
       setAllLogs(logsMap);
       setLastLogs(lastLogsMap);
       setSortingReady(true);
@@ -172,7 +182,7 @@ export default function Home() {
         if (typeof window !== 'undefined') {
           // Restore scroll position
           const savedScrollY = sessionStorage.getItem('ago-list-scroll-y');
-          if (savedScrollY) {
+          if (savedScrollY && savedScrollY !== '0') {
             isRestoringScroll.current = true;
             window.scrollTo({
               top: parseInt(savedScrollY, 10),
@@ -181,10 +191,14 @@ export default function Home() {
             // Brief delay to allow the scroll event to fire before we start saving again
             setTimeout(() => {
               isRestoringScroll.current = false;
-            }, 100);
+              setIsScrollRestored(true);
+            }, 50);
+          } else {
+            // No scroll to restore, mark as ready immediately
+            setIsScrollRestored(true);
           }
         }
-      }, 100);
+      }, 50);
       return () => clearTimeout(timer);
     }
   }, [sortingReady]);
@@ -202,10 +216,10 @@ export default function Home() {
         const categoryName = category?.name || '';
         const titleMatch = item.title.toLowerCase().includes(query);
         const categoryMatch = categoryName.toLowerCase().includes(query);
-        
+
         // Search in log notes
         const itemLogs = allLogs[item.id] || [];
-        const noteMatch = itemLogs.some(log => 
+        const noteMatch = itemLogs.some(log =>
           log.note?.toLowerCase().includes(query)
         );
 
@@ -276,13 +290,15 @@ export default function Home() {
   const sortActive = sortMethod !== 'recently-done';
 
   return (
-    <div className="flex flex-col h-full min-h-[100dvh] bg-white dark:bg-background">
-      {/* Fixed Header */}
-      <div 
-        ref={headerRef}
-        className={`sticky top-0 z-30 ago-sticky-header bg-white dark:bg-background transition-shadow ${
-          scrollY > 0 ? 'shadow-sm border-b border-gray-100 dark:border-gray-800' : ''
+    <div
+      className={`flex flex-col h-full min-h-[100dvh] bg-white dark:bg-background transition-opacity duration-150 ${isScrollRestored ? 'opacity-100' : 'opacity-0'
         }`}
+    >
+      {/* Fixed Header */}
+      <div
+        ref={headerRef}
+        className={`sticky top-0 z-30 ago-sticky-header bg-white dark:bg-background transition-shadow ${scrollY > 0 ? 'shadow-sm border-b border-gray-100 dark:border-gray-800' : ''
+          }`}
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         {/* Row 1: Title + Settings */}
@@ -311,7 +327,7 @@ export default function Home() {
       </div>
 
       {/* Content Area - with padding for header and FAB */}
-      <div className="flex-1 px-3 py-2 space-y-2" style={{ 
+      <div className="flex-1 px-3 py-2 space-y-2" style={{
         paddingTop: '0.5rem',
         paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))'
       }}>
@@ -341,7 +357,7 @@ export default function Home() {
               onDone={(actionType) => {
                 // Refresh logic.
                 reloadItems();
-                
+
                 if (actionType === 'undo') {
                   setHighlightedItemId(item.id);
                   // Clear highlight after some time
