@@ -150,27 +150,13 @@ export default function Home() {
       // Small delay to ensure the list has rendered
       const timer = setTimeout(() => {
         if (typeof window !== 'undefined') {
-          // 1. Highlight last viewed item
-          const lastViewedId = sessionStorage.getItem('ago-last-viewed-item-id');
-          if (lastViewedId) {
-            setHighlightedItemId(lastViewedId);
-            // Clear from session storage so it doesn't highlight again on refresh
-            sessionStorage.removeItem('ago-last-viewed-item-id');
-            
-            // Clear highlight after some time
-            setTimeout(() => {
-              setHighlightedItemId(null);
-            }, 3000);
-          } else {
-            // 2. Only restore scroll position if we're not highlighting/auto-scrolling to an item
-            // (ItemCard handles its own scrolling into view when highlighted)
-            const savedScrollY = sessionStorage.getItem('ago-list-scroll-y');
-            if (savedScrollY) {
-              window.scrollTo({
-                top: parseInt(savedScrollY, 10),
-                behavior: 'instant'
-              });
-            }
+          // Restore scroll position
+          const savedScrollY = sessionStorage.getItem('ago-list-scroll-y');
+          if (savedScrollY) {
+            window.scrollTo({
+              top: parseInt(savedScrollY, 10),
+              behavior: 'instant'
+            });
           }
         }
       }, 100);

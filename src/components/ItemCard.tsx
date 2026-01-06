@@ -65,7 +65,7 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
             // Small delay to ensure the list has finished re-sorting
             const timer = setTimeout(() => {
                 containerRef.current?.scrollIntoView({ 
-                    behavior: 'smooth', 
+                    behavior: 'instant', 
                     block: 'center' 
                 });
                 setShowHighlight(true);
@@ -263,10 +263,6 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
         // Only navigate if we didn't just perform a drag action
         const dragDist = Math.abs(dragInfo.current.currentX - dragInfo.current.startX);
         if (dragDist < 5) {
-            // Save last viewed item ID
-            if (typeof window !== 'undefined') {
-                sessionStorage.setItem('ago-last-viewed-item-id', item.id);
-            }
             router.push(`/items/${item.id}`);
         }
     };
@@ -350,9 +346,9 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
                         : (isDarkMode ? 'none' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'),
                     transform: isCompleting 
                         ? (offsetX < 0 ? 'translate3d(-110%, 0, 0)' : 'translate3d(110%, 0, 0)') 
-                        : `translate3d(${offsetX}px, 0, 0) ${showHighlight ? 'scale(1.03)' : 'scale(1)'}`,
+                        : `translate3d(${offsetX}px, 0, 0) scale(1)`,
                     transitionProperty: 'all',
-                    transitionDuration: isDragging ? '0ms' : (showHighlight ? '300ms' : '300ms'),
+                    transitionDuration: (isDragging || showHighlight) ? '0ms' : '300ms',
                     transitionTimingFunction: showHighlight 
                         ? 'cubic-bezier(0.34, 1.56, 0.64, 1)'
                         : (!isDragging && !isCompleting ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'cubic-bezier(0.4, 0, 0.2, 1)'),
