@@ -11,8 +11,9 @@ import { logsRepo } from '@/lib/storage/logsRepo';
 
 interface ItemCardProps {
     item: Item;
-    onDone?: () => void;
+    onDone?: (actionType?: 'complete' | 'undo') => void;
     density: 'regular' | 'compact';
+    isHighlighted?: boolean;
 }
 
 interface Particle {
@@ -32,7 +33,7 @@ const CATEGORY_GRADIENTS: Record<string, string> = {
     'Home': 'linear-gradient(90deg, #10B981, #ECFDF5)',
 };
 
-export function ItemCard({ item, onDone, density }: ItemCardProps) {
+export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps) {
     const { lastLog, loading, reload } = useLastLog(item.id);
     const { categories } = useCategories();
     const router = useRouter();
@@ -46,6 +47,7 @@ export function ItemCard({ item, onDone, density }: ItemCardProps) {
     const [isStampActive, setIsStampActive] = useState(false);
     const [particles, setParticles] = useState<Particle[]>([]);
     const [particlesActive, setParticlesActive] = useState(false);
+    const [showHighlight, setShowHighlight] = useState(false);
     
     const dragInfo = useRef({
         startX: 0,
@@ -55,6 +57,25 @@ export function ItemCard({ item, onDone, density }: ItemCardProps) {
     
     const containerRef = useRef<HTMLDivElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
+
+    // Handle highlight and scroll
+    useEffect(() => {
+        if (isHighlighted && containerRef.current) {
+            // Small delay to ensure the list has finished re-sorting
+            const timer = setTimeout(() => {
+                containerRef.current?.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+                setShowHighlight(true);
+                // Highlight stays for the duration set in parent (2.5s)
+                // but we can turn off the animation state locally earlier if needed
+            }, 100);
+            return () => clearTimeout(timer);
+        } else {
+            setShowHighlight(false);
+        }
+    }, [isHighlighted]);
 
     useEffect(() => {
         const checkDarkMode = () => {
@@ -124,7 +145,7 @@ export function ItemCard({ item, onDone, density }: ItemCardProps) {
             setTimeout(async () => {
                 await logsRepo.add(item.id, getTodayDateString());
                 reload();
-                onDone?.();
+                onDone?.('complete');
             }, 300);
         }, 300);
     }, [isCompleting, item.id, reload, onDone, category?.color]);
@@ -146,7 +167,7 @@ export function ItemCard({ item, onDone, density }: ItemCardProps) {
             setTimeout(async () => {
                 await logsRepo.delete(lastLog.id);
                 reload();
-                onDone?.();
+                onDone?.('undo');
                 // After reload, we need to make sure the card is visible again if it's still in the list
                 // But usually the parent will re-render the list. 
                 // For safety, we reset states if the component doesn't unmount
@@ -311,16 +332,22 @@ export function ItemCard({ item, onDone, density }: ItemCardProps) {
             <div
                 ref={cardRef}
                 onClick={handleCardClick}
-                className={`block group relative overflow-hidden rounded-3xl bg-white dark:bg-gray-900/50 border ${!isDragging ? 'transition-all duration-300' : 'transition-none'} ${isCompact ? 'px-3 py-3' : 'px-4 py-4'} cursor-grab active:cursor-grabbing`}
+                className={`block group relative overflow-hidden rounded-3xl bg-white dark:bg-gray-900/50 border ${!isDragging ? 'transition-all duration-300' : 'transition-none'} ${isCompact ? 'px-3 py-3' : 'px-4 py-4'} cursor-grab active:cursor-grabbing ${showHighlight ? 'z-10' : 'z-0'}`}
                 style={{
-                    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.10)',
-                    boxShadow: isDarkMode ? 'none' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                    borderColor: showHighlight 
+                        ? (category?.color || '#3B82F6') 
+                        : (isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.10)'),
+                    boxShadow: showHighlight
+                        ? `0 0 0 2px ${(category?.color || '#3B82F6')}40, 0 8px 16px -4px rgba(0, 0, 0, 0.1)`
+                        : (isDarkMode ? 'none' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'),
                     transform: isCompleting 
                         ? (offsetX < 0 ? 'translate3d(-110%, 0, 0)' : 'translate3d(110%, 0, 0)') 
-                        : `translate3d(${offsetX}px, 0, 0)`,
+                        : `translate3d(${offsetX}px, 0, 0) ${showHighlight ? 'scale(1.02)' : 'scale(1)'}`,
                     transitionProperty: isDragging ? 'none' : 'all',
-                    transitionDuration: isDragging ? '0ms' : '300ms',
-                    transitionTimingFunction: !isDragging && !isCompleting ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'cubic-bezier(0.4, 0, 0.2, 1)',
+                    transitionDuration: isDragging ? '0ms' : (showHighlight ? '500ms' : '300ms'),
+                    transitionTimingFunction: showHighlight 
+                        ? 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+                        : (!isDragging && !isCompleting ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'cubic-bezier(0.4, 0, 0.2, 1)'),
                     opacity: isToday ? 0.7 : 1,
                     touchAction: 'pan-y',
                     willChange: 'transform',

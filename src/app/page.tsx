@@ -65,6 +65,7 @@ export default function Home() {
 
   const [lastLogs, setLastLogs] = useState<Record<string, LogEntry | undefined>>({});
   const [allLogs, setAllLogs] = useState<Record<string, LogEntry[]>>({});
+  const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
 
   // Effect to fetch all logs when items change.
   // This is a bit "N+1" but local DB is fast.
@@ -242,17 +243,18 @@ export default function Home() {
               key={item.id}
               item={item}
               density={prefs.density}
-              onDone={() => {
+              isHighlighted={highlightedItemId === item.id}
+              onDone={(actionType) => {
                 // Refresh logic.
-                // We need to reload Items (to trigger sort re-calc) or just update local logs state.
-                // Triggering item reload is safe.
                 reloadItems();
-                // Also update local logs immediately?
-                // The ItemCard updates itself, but the list sort order won't change until `items` or `lastLogs` changes.
-                // We'll trust `reloadItems` to trigger re-render, 
-                // but actually `items` array might be same so effect won't run if reference equality holds?
-                // `itemsRepo.getAll` returns new array.
-                // So it will trigger `fetchAllLogs`.
+                
+                if (actionType === 'undo') {
+                  setHighlightedItemId(item.id);
+                  // Clear highlight after some time
+                  setTimeout(() => {
+                    setHighlightedItemId(null);
+                  }, 2500);
+                }
               }}
             />
           ))
