@@ -142,11 +142,7 @@ export function ItemCard({ item, onDone, density }: ItemCardProps) {
     const handleDragMove = (clientX: number) => {
         if (!isDragging || isCompleting) return;
         const diff = clientX - dragInfo.current.startX;
-        if (diff < 0) {
-            setOffsetX(0);
-        } else {
-            setOffsetX(diff);
-        }
+        setOffsetX(Math.max(0, diff));
         dragInfo.current.currentX = clientX;
     };
 
@@ -269,14 +265,21 @@ export function ItemCard({ item, onDone, density }: ItemCardProps) {
             <div
                 ref={cardRef}
                 onClick={handleCardClick}
-                className={`block group relative overflow-hidden rounded-3xl bg-white dark:bg-gray-900/50 border transition-all ${!isDragging ? 'duration-300' : ''} ${isCompact ? 'px-3 py-3' : 'px-4 py-4'} ${isToday ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'}`}
+                className={`block group relative overflow-hidden rounded-3xl bg-white dark:bg-gray-900/50 border ${!isDragging ? 'transition-all duration-300' : 'transition-none'} ${isCompact ? 'px-3 py-3' : 'px-4 py-4'} ${isToday ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'}`}
                 style={{
                     borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.10)',
                     boxShadow: isDarkMode ? 'none' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                    transform: isCompleting ? 'translateX(110%)' : `translateX(${offsetX}px)`,
+                    transform: isCompleting ? 'translate3d(110%, 0, 0)' : `translate3d(${offsetX}px, 0, 0)`,
+                    transitionProperty: isDragging ? 'none' : 'all',
+                    transitionDuration: isDragging ? '0ms' : '300ms',
                     transitionTimingFunction: !isDragging && !isCompleting ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'cubic-bezier(0.4, 0, 0.2, 1)',
                     opacity: isToday ? 0.7 : 1,
-                    touchAction: 'pan-y'
+                    touchAction: 'pan-y',
+                    willChange: 'transform',
+                    WebkitUserSelect: 'none',
+                    userSelect: 'none',
+                    WebkitBackfaceVisibility: 'hidden',
+                    backfaceVisibility: 'hidden'
                 }}
                 onMouseDown={onMouseDown}
                 onTouchStart={onTouchStart}
