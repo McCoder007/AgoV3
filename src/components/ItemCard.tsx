@@ -372,13 +372,13 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
                         : (isDarkMode ? 'none' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'),
                     transform: isCompleting
                         ? (offsetX < 0 ? 'translate3d(-110%, 0, 0)' : 'translate3d(110%, 0, 0)')
-                        : `translate3d(${offsetX}px, 0, 0) scale(${showHighlight ? 1.03 : 1})`,
+                        : `translate3d(${offsetX + (isHighlighted && !showHighlight ? -20 : 0)}px, 0, 0)`,
                     transitionProperty: 'all',
                     transitionDuration: isDragging ? '0ms' : '400ms',
                     transitionTimingFunction: showHighlight
                         ? 'cubic-bezier(0.34, 1.56, 0.64, 1)'
                         : (!isDragging && !isCompleting ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'cubic-bezier(0.4, 0, 0.2, 1)'),
-                    opacity: isToday ? 0.7 : 1,
+                    opacity: (isHighlighted && !showHighlight) ? 0 : (isToday ? 0.7 : 1),
                     touchAction: 'pan-y',
                     willChange: 'transform, background-color, border-color, box-shadow',
                     WebkitUserSelect: 'none',
