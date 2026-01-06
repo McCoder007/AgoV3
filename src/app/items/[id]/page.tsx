@@ -17,7 +17,7 @@ import { useMemo } from 'react';
 export default function ItemDetailPage() {
     const { id } = useParams<{ id: string }>();
     const { items, loading: itemsLoading, reload: reloadItems } = useItems();
-    const { categories } = useCategories();
+    const { categories, reload: reloadCategories } = useCategories();
     const { logs, reload: reloadLogs } = useItemLogs(id);
 
     const [editingLog, setEditingLog] = useState<LogEntry | null>(null);
@@ -131,19 +131,17 @@ export default function ItemDetailPage() {
                         </Link>
                         <button
                             onClick={() => setIsEditSheetOpen(true)}
-                            className="flex items-center justify-center min-w-[44px] min-h-[44px] -mr-2 text-text-secondary dark:text-text-secondary hover:text-text-primary dark:hover:text-white transition-colors"
+                            className="flex items-center justify-center min-w-[44px] min-h-[44px] text-text-secondary dark:text-text-secondary hover:text-text-primary dark:hover:text-white transition-colors"
                         >
                             <Pencil size={20} />
                         </button>
                     </div>
 
-                    <div className="flex justify-between items-start">
+                    <div className="flex justify-between items-baseline">
                         <div className="flex-1 min-w-0 pr-4">
-                            <div className="flex items-start justify-between gap-4 mb-2">
-                                <h1 className="text-2xl font-bold leading-tight tracking-[-0.3px] text-text-primary dark:text-white">
-                                    {item.title}
-                                </h1>
-                            </div>
+                            <h1 className="text-2xl font-bold leading-tight tracking-[-0.3px] text-text-primary dark:text-white mb-2">
+                                {item.title}
+                            </h1>
                             {category && (
                                 <span 
                                     className="inline-block px-[14px] py-1.5 rounded-full text-[13px] font-semibold uppercase tracking-wider bg-bg-blue-tint text-primary-blue"
@@ -234,6 +232,7 @@ export default function ItemDetailPage() {
                 onSave={() => {
                     reloadItems();
                 }}
+                onCategoryCreated={reloadCategories}
             />
         </div>
     );

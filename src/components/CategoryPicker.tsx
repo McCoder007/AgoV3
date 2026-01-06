@@ -13,7 +13,7 @@ interface CategoryPickerProps {
   categories: Category[];
   selectedId: string;
   onSelect: (id: string) => void;
-  onCategoryCreated: (id: string) => void;
+  onCategoryCreated: (id: string) => void | Promise<void>;
 }
 
 export function CategoryPicker({
@@ -88,9 +88,10 @@ export function CategoryPicker({
     try {
       const color = findLeastUsedColor();
       const newCat = await categoriesRepo.create(name, color);
-      onCategoryCreated(newCat.id);
+      // Wait for parent to process creation (tracking usage, reloading etc)
+      await onCategoryCreated(newCat.id);
       onSelect(newCat.id);
-      onClose();
+      // Don't close immediately - let parent handle closing after state updates
     } catch (e) {
       console.error('Failed to create category:', e);
     } finally {

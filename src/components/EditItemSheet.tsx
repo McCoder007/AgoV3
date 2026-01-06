@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { X, Trash2, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { CategoryPicker } from '@/components/CategoryPicker';
 import { itemsRepo } from '@/lib/storage/itemsRepo';
 import { recentCategoriesRepo } from '@/lib/storage/recentCategories';
 import { useCategories } from '@/hooks/useData';
 import clsx from 'clsx';
+
+// Lazy load CategoryPicker - only load when needed
+const CategoryPicker = lazy(() => import('@/components/CategoryPicker').then(module => ({ default: module.CategoryPicker })));
 
 interface EditItemSheetProps {
   isOpen: boolean;
@@ -16,6 +18,7 @@ interface EditItemSheetProps {
   initialTitle: string;
   initialCategoryId: string;
   onSave: () => void;
+  onCategoryCreated?: () => void;
 }
 
 export function EditItemSheet({
@@ -25,6 +28,7 @@ export function EditItemSheet({
   initialTitle,
   initialCategoryId,
   onSave,
+  onCategoryCreated,
 }: EditItemSheetProps) {
   const router = useRouter();
   const { categories, reload: reloadCategories } = useCategories();
@@ -33,19 +37,22 @@ export function EditItemSheet({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [recentIds, setRecentIds] = useState<string[]>([]);
 
+  // Cache recent category IDs in state to avoid blocking localStorage reads
   useEffect(() => {
     if (isOpen) {
       setTitle(initialTitle);
       setCategoryId(initialCategoryId);
       setShowDeleteConfirm(false);
+      // Read from localStorage once when sheet opens
+      setRecentIds(recentCategoriesRepo.getRecentIds());
     }
   }, [isOpen, initialTitle, initialCategoryId]);
 
   const isChanged = title.trim() !== initialTitle || categoryId !== initialCategoryId;
 
-  // Category Chips logic
-  const recentIds = useMemo(() => recentCategoriesRepo.getRecentIds(), [isOpen]);
+  // Category Chips logic - use cached recentIds from state
   const displayCategories = useMemo(() => {
     const recent = categories.filter(c => recentIds.includes(c.id))
       .sort((a, b) => recentIds.indexOf(a.id) - recentIds.indexOf(b.id));
@@ -54,8 +61,6 @@ export function EditItemSheet({
     
     return [...recent, ...others].slice(0, 8);
   }, [categories, recentIds]);
-
-  if (!isOpen) return null;
 
   const handleSubmit = async () => {
     if (!title.trim() || !categoryId) return;
@@ -91,16 +96,30 @@ export function EditItemSheet({
     }
   };
 
+  // Pre-mount component but hide with CSS to avoid mount overhead
+  // Use visibility instead of display: none to allow transform animations
   return (
     <>
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm z-[55] transition-opacity"
         onClick={onClose}
+        style={{ 
+          pointerEvents: isOpen ? 'auto' : 'none', 
+          opacity: isOpen ? 1 : 0,
+          visibility: isOpen ? 'visible' : 'hidden'
+        }}
       />
 
       {/* Bottom Sheet */}
-      <div className="fixed inset-x-0 bottom-0 z-[60] bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl transform transition-transform duration-300 ease-out h-[92vh] flex flex-col">
+      <div 
+        className="fixed inset-x-0 bottom-0 z-[60] bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl transform transition-transform duration-300 ease-out h-[92vh] flex flex-col"
+        style={{ 
+          transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
+          pointerEvents: isOpen ? 'auto' : 'none',
+          visibility: isOpen ? 'visible' : 'hidden'
+        }}
+      >
         {/* Handle bar */}
         <div className="flex justify-center pt-4 pb-2">
           <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full" />
@@ -232,17 +251,23 @@ export function EditItemSheet({
         </div>
       )}
 
-      <CategoryPicker
-        isOpen={isPickerOpen}
-        onClose={() => setIsPickerOpen(false)}
-        categories={categories}
-        selectedId={categoryId}
-        onSelect={setCategoryId}
-        onCategoryCreated={async (newId) => {
-          await reloadCategories();
-          setCategoryId(newId);
-        }}
-      />
+      {/* Lazy load CategoryPicker only when picker is opened */}
+      {isPickerOpen && (
+        <Suspense fallback={null}>
+          <CategoryPicker
+            isOpen={isPickerOpen}
+            onClose={() => setIsPickerOpen(false)}
+            categories={categories}
+            selectedId={categoryId}
+            onSelect={setCategoryId}
+            onCategoryCreated={async (newId) => {
+              await reloadCategories();
+              setCategoryId(newId);
+              onCategoryCreated?.();
+            }}
+          />
+        </Suspense>
+      )}
     </>
   );
 }
