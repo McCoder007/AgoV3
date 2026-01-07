@@ -5,7 +5,6 @@ import { getCategoryColors } from '@/lib/colorUtils';
 interface CategoryPillProps {
   categoryName: string;
   customColor?: string;
-  isDark: boolean;
   className?: string;
 }
 
@@ -18,8 +17,9 @@ interface CategoryPillProps {
  * - Border radius: 4.5px
  * - Display: inline-block, white-space: nowrap
  */
-export function CategoryPill({ categoryName, customColor, isDark, className = '' }: CategoryPillProps) {
-  const colors = getCategoryColors(categoryName, customColor, isDark);
+export function CategoryPill({ categoryName, customColor, className = '' }: CategoryPillProps) {
+  const lightColors = getCategoryColors(categoryName, customColor, false);
+  const darkColors = getCategoryColors(categoryName, customColor, true);
 
   return (
     <span
@@ -31,11 +31,27 @@ export function CategoryPill({ categoryName, customColor, isDark, className = ''
         textTransform: 'uppercase',
         padding: '4.5px 10.5px',
         borderRadius: '4.5px',
-        backgroundColor: colors.backgroundColor,
-        color: colors.color,
-        border: isDark ? `1px solid ${colors.color}20` : 'none',
+        backgroundColor: 'var(--pill-bg)',
+        color: 'var(--pill-text)',
+        border: '1px solid var(--pill-border)',
+        // @ts-ignore
+        '--pill-bg': lightColors.backgroundColor,
+        '--pill-text': lightColors.color,
+        '--pill-border': 'transparent',
       }}
     >
+      <style jsx>{`
+        span {
+          background-color: var(--pill-bg);
+          color: var(--pill-text);
+          border-color: var(--pill-border);
+        }
+        :global(.dark) span {
+          --pill-bg: ${darkColors.backgroundColor} !important;
+          --pill-text: ${darkColors.color} !important;
+          --pill-border: ${darkColors.color}20 !important;
+        }
+      `}</style>
       {categoryName}
     </span>
   );

@@ -32,24 +32,7 @@ export default function ItemDetailPage() {
 
     const [editingLog, setEditingLog] = useState<LogEntry | null>(null);
     const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
-    const [isDarkMode, setIsDarkMode] = useState(false);
 
-    // Detect dark mode
-    useEffect(() => {
-        const checkDarkMode = () => {
-            setIsDarkMode(document.documentElement.classList.contains('dark'));
-        };
-
-        checkDarkMode();
-
-        const observer = new MutationObserver(checkDarkMode);
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['class'],
-        });
-
-        return () => observer.disconnect();
-    }, []);
 
     const item = items.find(i => i.id === id);
     const category = categories.find(c => c.id === item?.categoryId);
@@ -152,7 +135,7 @@ export default function ItemDetailPage() {
                                 {item.title}
                             </h1>
                             {category && (
-                                <CategoryPill categoryName={category.name} customColor={category.color} isDark={isDarkMode} />
+                                <CategoryPill categoryName={category.name} customColor={category.color} />
                             )}
                         </div>
 

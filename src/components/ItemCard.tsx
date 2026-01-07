@@ -31,7 +31,6 @@ interface Particle {
 export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps) {
     const { lastLog, loading, reload } = useLastLog(item.id);
     const { categories } = useDataContext();
-    const [isDarkMode, setIsDarkMode] = useState(false);
 
     // Swipe State
     const [isDragging, setIsDragging] = useState(false);
@@ -64,30 +63,12 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
                     block: 'center'
                 });
                 setShowHighlight(true);
-                // Highlight stays for the duration set in parent (2.5s)
-                // but we can turn off the animation state locally earlier if needed
             }, 100);
             return () => clearTimeout(timer);
         } else {
             setShowHighlight(false);
         }
     }, [isHighlighted]);
-
-    useEffect(() => {
-        const checkDarkMode = () => {
-            setIsDarkMode(document.documentElement.classList.contains('dark'));
-        };
-
-        checkDarkMode();
-
-        const observer = new MutationObserver(checkDarkMode);
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['class'],
-        });
-
-        return () => observer.disconnect();
-    }, []);
 
     const category = categories.find(c => c.id === item.categoryId);
     const categoryName = category?.name || 'Uncategorized';
@@ -97,16 +78,13 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
         if (isCompleting) return;
         setIsCompleting(true);
 
-        // Haptic Feedback
         if ('vibrate' in navigator) {
             navigator.vibrate(50);
         }
 
-        // Spring Stamp
         setIsStampActive(true);
         setTimeout(() => setIsStampActive(false), 300);
 
-        // Confetti Pop
         const color = category?.color || '#3B82F6';
         const newParticles: Particle[] = Array.from({ length: 8 }).map((_, i) => ({
             id: Date.now() + i,
@@ -119,7 +97,6 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
         setParticles(newParticles);
         setParticlesActive(false);
 
-        // Use requestAnimationFrame to ensure the initial state (at 0,0) is rendered before triggering animation
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 setParticlesActive(true);
@@ -131,12 +108,8 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
             setParticlesActive(false);
         }, 800);
 
-        // Animation Sequence
-        // 1. Slide card off (handled by CSS transition on isCompleting)
-        // 2. Wait for slide to finish, then collapse
         setTimeout(() => {
             setIsCollapsed(true);
-            // 3. Trigger actual logic after collapse
             setTimeout(async () => {
                 await logsRepo.add(item.id, getTodayDateString());
                 reload();
@@ -156,16 +129,12 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
         setIsStampActive(true);
         setTimeout(() => setIsStampActive(false), 300);
 
-        // Animation sequence for undo
         setTimeout(() => {
             setIsCollapsed(true);
             setTimeout(async () => {
                 await logsRepo.delete(lastLog.id);
                 reload();
                 onDone?.('undo');
-                // After reload, we need to make sure the card is visible again if it's still in the list
-                // But usually the parent will re-render the list. 
-                // For safety, we reset states if the component doesn't unmount
                 setIsCollapsed(false);
                 setIsCompleting(false);
                 setOffsetX(0);
@@ -175,8 +144,6 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
 
     const handleDragStart = (clientX: number, clientY: number) => {
         if (isCompleting) return;
-        // Allow swipe left only if isToday is true
-        // Allow swipe right only if isToday is false
         dragInfo.current = {
             startX: clientX,
             startY: clientY,
@@ -193,31 +160,24 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
         const diffX = clientX - dragInfo.current.startX;
         const diffY = clientY - dragInfo.current.startY;
 
-        // If we haven't committed to swiping yet, check if this is an intentional swipe
         if (!dragInfo.current.hasCommittedToSwipe) {
             const absDiffX = Math.abs(diffX);
             const absDiffY = Math.abs(diffY);
 
-            // Require horizontal movement to exceed 12px AND be at least 1.5x the vertical movement
-            // This ensures scrolling doesn't accidentally trigger swipe
             if (absDiffX >= 12 && absDiffX > absDiffY * 1.5) {
                 dragInfo.current.hasCommittedToSwipe = true;
             } else if (absDiffY > 10) {
-                // If vertical movement is significant first, this is likely a scroll - cancel
                 setIsDragging(false);
                 setOffsetX(0);
                 return;
             } else {
-                // Not enough movement yet to determine intent
                 return;
             }
         }
 
         if (isToday) {
-            // Undo mode: only allow swipe left (diffX < 0)
             setOffsetX(Math.min(0, diffX));
         } else {
-            // Complete mode: only allow swipe right (diffX > 0)
             setOffsetX(Math.max(0, diffX));
         }
 
@@ -278,7 +238,6 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
     }, [isDragging]);
 
     const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-        // Only navigate if we didn't just perform a drag action
         const dragDist = Math.abs(dragInfo.current.currentX - dragInfo.current.startX);
         if (dragDist >= 5 || isDragging || isCompleting) {
             e.preventDefault();
@@ -311,14 +270,21 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
             <div
                 className={`absolute inset-0 rounded-3xl transition-opacity duration-200 flex items-center overflow-hidden ${offsetX < 0 ? 'justify-end px-6' : 'px-6'}`}
                 style={{
-                    background: offsetX < 0
-                        ? (isDarkMode 
-                            ? 'linear-gradient(270deg, #DC2626, #7F1D1D)' 
-                            : 'linear-gradient(270deg, #EF4444, #FEF2F2)')
-                        : swipeGradient,
                     opacity: Math.abs(offsetX) > 30 || isCompleting ? 1 : 0,
                 }}
             >
+                {/* Background sub-layers for theme-aware gradients */}
+                <div
+                    className="absolute inset-0 bg-[linear-gradient(270deg,#EF4444,#FEF2F2)] dark:bg-[linear-gradient(270deg,#DC2626,#7F1D1D)]"
+                    style={{ opacity: offsetX < 0 ? 1 : 0 }}
+                />
+                <div
+                    className="absolute inset-0"
+                    style={{
+                        opacity: offsetX >= 0 ? 1 : 0,
+                        background: swipeGradient
+                    }}
+                />
                 <div className={`flex items-center gap-3 relative ${offsetX < 0 ? 'flex-row-reverse' : ''}`}>
                     <div
                         className={`flex items-center justify-center rounded-full bg-white/20 transition-transform duration-300 ${isStampActive ? 'scale-[1.3]' : 'scale-100'}`}
@@ -359,11 +325,8 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
             >
                 <div
                     ref={cardRef}
-                    className={`group relative overflow-hidden rounded-3xl border ${isCompact ? 'px-3 py-3' : 'px-4 py-4'} cursor-grab active:cursor-grabbing`}
+                    className={`group relative overflow-hidden rounded-3xl border px-4 py-4 cursor-grab active:cursor-grabbing bg-white dark:bg-[#111827] border-black/10 dark:border-white/12 shadow-sm dark:shadow-none ${isCompact ? 'px-3 py-3' : 'px-4 py-4'}`}
                     style={{
-                        backgroundColor: (isDarkMode ? '#111827' : '#ffffff'),
-                        borderColor: (isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.10)'),
-                        boxShadow: (isDarkMode ? 'none' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'),
                         transform: isCompleting
                             ? (offsetX < 0 ? 'translate3d(-110%, 0, 0)' : 'translate3d(110%, 0, 0)')
                             : `translate3d(${offsetX + (isHighlighted && !showHighlight ? -20 : 0)}px, 0, 0)`,
@@ -382,42 +345,42 @@ export function ItemCard({ item, onDone, density, isHighlighted }: ItemCardProps
                     onMouseDown={onMouseDown}
                     onTouchStart={onTouchStart}
                 >
-                <div className="flex justify-between items-stretch gap-4 pointer-events-none">
-                    {/* Left Content */}
-                    <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                        <h3 className={`font-bold text-gray-900 dark:text-gray-100 truncate leading-tight ${isCompact ? 'text-xl' : 'text-2xl'}`}>
-                            {item.title}
-                        </h3>
-                        <div className="flex items-center gap-2 mt-2">
-                            <CategoryPill categoryName={categoryName} customColor={category?.color} isDark={isDarkMode} />
-                            {lastLog && (
-                                <span className="text-[13px] font-medium text-gray-400 dark:text-gray-500">
-                                    {formatDisplayDate(lastLog.date)}
-                                </span>
-                            )}
+                    <div className="flex justify-between items-stretch gap-4 pointer-events-none">
+                        {/* Left Content */}
+                        <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                            <h3 className={`font-bold text-gray-900 dark:text-gray-100 truncate leading-tight ${isCompact ? 'text-xl' : 'text-2xl'}`}>
+                                {item.title}
+                            </h3>
+                            <div className="flex items-center gap-2 mt-2">
+                                <CategoryPill categoryName={categoryName} customColor={category?.color} />
+                                {lastLog && (
+                                    <span className="text-[13px] font-medium text-gray-400 dark:text-gray-500">
+                                        {formatDisplayDate(lastLog.date)}
+                                    </span>
+                                )}
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Right Content */}
-                    <div className="flex items-center gap-4 shrink-0">
-                        {/* Metric Group */}
-                        <div className="flex flex-col items-end justify-between py-0.5">
-                            {daysSince === 'Never' ? (
-                                <div className="w-8 h-[2px] bg-gray-200 dark:bg-gray-700 rounded-full my-auto" />
-                            ) : (
-                                <>
-                                    <span className="font-bold text-4xl text-gray-900 dark:text-white leading-none">
-                                        {daysSince}
-                                    </span>
-                                    <span className="text-[10px] font-bold text-gray-400/60 dark:text-gray-500/60 uppercase tracking-widest mt-1.5 leading-none">
-                                        {daysSince === 1 ? 'DAY' : 'DAYS'}
-                                    </span>
-                                </>
-                            )}
+                        {/* Right Content */}
+                        <div className="flex items-center gap-4 shrink-0">
+                            {/* Metric Group */}
+                            <div className="flex flex-col items-end justify-between py-0.5">
+                                {daysSince === 'Never' ? (
+                                    <div className="w-8 h-[2px] bg-gray-200 dark:bg-gray-700 rounded-full my-auto" />
+                                ) : (
+                                    <>
+                                        <span className="font-bold text-4xl text-gray-900 dark:text-white leading-none">
+                                            {daysSince}
+                                        </span>
+                                        <span className="text-[10px] font-bold text-gray-400/60 dark:text-gray-500/60 uppercase tracking-widest mt-1.5 leading-none">
+                                            {daysSince === 1 ? 'DAY' : 'DAYS'}
+                                        </span>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             </Link>
         </div>
     );
