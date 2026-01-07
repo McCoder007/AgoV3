@@ -92,7 +92,7 @@ export function CategoryDropdown({ categories, selectedId, onSelect, onCreateCat
 
     // Close dropdown when clicking outside
     useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
+        function handleClickOutside(event: MouseEvent | TouchEvent) {
             if (
                 dropdownRef.current &&
                 buttonRef.current &&
@@ -105,8 +105,10 @@ export function CategoryDropdown({ categories, selectedId, onSelect, onCreateCat
 
         if (isOpen) {
             document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('touchstart', handleClickOutside);
             return () => {
                 document.removeEventListener('mousedown', handleClickOutside);
+                document.removeEventListener('touchstart', handleClickOutside);
             };
         }
     }, [isOpen]);

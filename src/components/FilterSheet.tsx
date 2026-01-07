@@ -47,13 +47,13 @@ export function FilterSheet({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/20 dark:bg-black/40 z-[25] transition-opacity"
+        className="fixed inset-0 bg-black/20 dark:bg-black/40 z-[35] transition-opacity"
         onClick={onClose}
       />
 
       {/* Inline Overlay Panel */}
       <div 
-        className="fixed left-0 right-0 z-[30] bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-lg max-h-[60vh] overflow-y-auto"
+        className="fixed left-0 right-0 z-[40] bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-lg max-h-[60vh] overflow-y-auto"
         style={{
           top: 'calc(108px + env(safe-area-inset-top, 0px))',
         }}
