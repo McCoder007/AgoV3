@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePreferences, useCategories, useItems } from '@/hooks/useData';
 import { categoriesRepo } from '@/lib/storage/categoriesRepo';
 import { clearDatabase } from '@/lib/storage/db';
@@ -27,6 +27,8 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
   const [newCatName, setNewCatName] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [editingColorId, setEditingColorId] = useState<string | null>(null);
+  const [pickerPosition, setPickerPosition] = useState<Record<string, { top: number; left: number; placement: 'top' | 'bottom' }>>({});
+  const colorPickerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const themes = [
     { value: 'system', label: 'System', icon: Monitor },
@@ -124,6 +126,74 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
     reloadCats();
     setEditingColorId(null);
   };
+
+  // Calculate picker position when it opens
+  useEffect(() => {
+    if (editingColorId === null) return;
+
+    const button = colorPickerRefs.current[editingColorId];
+    if (!button) return;
+
+    const calculatePosition = () => {
+      const rect = button.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const pickerHeight = 180; // Approximate height of color picker (4 rows * 40px + padding)
+      const pickerWidth = 180; // min-w-[180px]
+      const gap = 8; // mt-2 or mb-2 gap
+      
+      // Determine placement (above or below)
+      const placement: 'top' | 'bottom' = spaceBelow < pickerHeight && spaceAbove > pickerHeight ? 'top' : 'bottom';
+      
+      // Calculate top position
+      let top: number;
+      if (placement === 'top') {
+        top = rect.top - pickerHeight - gap;
+      } else {
+        top = rect.bottom + gap;
+      }
+      
+      // Calculate left position (align with button, but keep within viewport)
+      let left = rect.left;
+      const rightEdge = left + pickerWidth;
+      if (rightEdge > viewportWidth) {
+        left = viewportWidth - pickerWidth - 16; // 16px padding from edge
+      }
+      if (left < 16) {
+        left = 16; // 16px padding from edge
+      }
+      
+      setPickerPosition(prev => ({ 
+        ...prev, 
+        [editingColorId]: { top, left, placement } 
+      }));
+    };
+
+    // Calculate immediately with a small delay to ensure DOM is ready
+    const timeoutId = setTimeout(calculatePosition, 0);
+
+    // Recalculate on scroll or resize
+    const scrollContainer = button.closest('.overflow-y-auto');
+    const handleScroll = () => calculatePosition();
+    const handleResize = () => calculatePosition();
+    
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll, true);
+    }
+    window.addEventListener('scroll', handleScroll, true);
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll, true);
+      }
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [editingColorId]);
 
   // Close color picker when clicking outside
   useEffect(() => {
@@ -272,6 +342,7 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
                           {/* Color preview/swatch with picker */}
                           <div className="relative" data-color-picker>
                             <button
+                              ref={(el) => { colorPickerRefs.current[cat.id] = el; }}
                               type="button"
                               onClick={() => setEditingColorId(editingColorId === cat.id ? null : cat.id)}
                               className={clsx(
@@ -286,8 +357,14 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
                             >
                               {!cat.color && <Palette size={14} className="text-gray-400" />}
                             </button>
-                            {editingColorId === cat.id && (
-                              <div className="absolute top-full left-0 mt-2 z-50 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xl p-3 min-w-[180px]">
+                            {editingColorId === cat.id && pickerPosition[cat.id] && (
+                              <div 
+                                className="fixed z-[60] bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xl p-3 min-w-[180px]"
+                                style={{
+                                  top: `${pickerPosition[cat.id].top}px`,
+                                  left: `${pickerPosition[cat.id].left}px`,
+                                }}
+                              >
                                 <div className="grid grid-cols-4 gap-2">
                                   {DEFAULT_CATEGORY_COLORS.map((color) => (
                                     <button

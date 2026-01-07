@@ -46,22 +46,22 @@ export const DEFAULT_CATEGORIES = [
   'Personal',
 ];
 
-// Default color palette for categories (16 accessible colors)
+// Default color palette for categories (16 accessible colors with 6:1 contrast ratio)
 export const DEFAULT_CATEGORY_COLORS = [
-  '#3B82F6', // Blue
-  '#10B981', // Emerald
-  '#F43F5E', // Rose
-  '#F59E0B', // Amber
-  '#8B5CF6', // Violet
-  '#06B6D4', // Cyan
-  '#F97316', // Orange
-  '#D946EF', // Fuchsia
-  '#22C55E', // Green
-  '#14B8A6', // Teal
-  '#6366F1', // Indigo
-  '#EC4899', // Pink
-  '#84CC16', // Lime
-  '#EF4444', // Red
-  '#0EA5E9', // Sky
-  '#A855F7', // Purple
+  '#B91C1C', // Red
+  '#9A3412', // Orange
+  '#92400E', // Amber
+  '#78350F', // Yellow
+  '#365314', // Lime
+  '#166534', // Green
+  '#065F46', // Emerald
+  '#134E4A', // Teal
+  '#164E63', // Cyan
+  '#0C4A6E', // Sky
+  '#1E40AF', // Blue
+  '#3730A3', // Indigo
+  '#5B21B6', // Violet
+  '#6B21A8', // Purple
+  '#86198F', // Fuchsia
+  '#9F1239', // Pink
 ];
