@@ -228,11 +228,11 @@ export function SortDropdown({
         onClick={(e) => e.stopPropagation()}
       >
         <div
-          className="rounded-[12px] bg-white dark:bg-[#1a1a1a] shadow-[0_4px_16px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
+          className="rounded-[20px] bg-white dark:bg-[#1e2530] shadow-[0_4px_16px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
         >
           {/* Header */}
           <div
-            className="border-b border-black/8 dark:border-white/8"
+            className="border-b border-black/8 dark:border-white/10"
             style={{
               padding: '16px 20px 12px 20px',
             }}
@@ -270,10 +270,11 @@ export function SortDropdown({
                     'w-full flex items-center justify-between border-none cursor-pointer',
                     'bg-transparent outline-none',
                     'transition-colors duration-150',
+                    'hover:bg-black/5 dark:hover:bg-white/5',
                     'focus:outline-none focus:ring-0 focus:border-0'
                   )}
                   style={{
-                    padding: '12px 20px',
+                    padding: '16px 20px',
                     outline: 'none',
                     border: 'none',
                     boxShadow: 'none',
@@ -286,11 +287,11 @@ export function SortDropdown({
                     className={clsx(
                       'transition-opacity duration-150',
                       isSelected
-                        ? 'text-black dark:text-white'
-                        : 'text-black/60 dark:text-white/70'
+                        ? 'text-[#1a1f2e] dark:text-white'
+                        : 'text-[#1a1f2e] dark:text-white/90'
                     )}
                     style={{
-                      fontSize: '15px',
+                      fontSize: '17px',
                       fontWeight: 500,
                     }}
                   >
@@ -301,7 +302,7 @@ export function SortDropdown({
                     height="20"
                     viewBox="0 0 24 24"
                     fill="none"
-                    stroke="#007AFF"
+                    stroke="#0A84FF"
                     strokeWidth="3"
                     strokeLinecap="round"
                     strokeLinejoin="round"
