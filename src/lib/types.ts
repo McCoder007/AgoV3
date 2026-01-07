@@ -46,22 +46,25 @@ export const DEFAULT_CATEGORIES = [
   'Personal',
 ];
 
-// Default color palette for categories (16 accessible colors with 6:1 contrast ratio)
+// Default color palette for categories (16 accessible colors)
+// Uses text colors from the new semantic color system
+// For colors that share dark mode text colors (mint/emerald, violet/purple, bronze/amber),
+// we use the light mode text color as the identifier to ensure uniqueness
 export const DEFAULT_CATEGORY_COLORS = [
-  '#B91C1C', // Red
-  '#9A3412', // Orange
-  '#92400E', // Amber
-  '#78350F', // Yellow
-  '#365314', // Lime
-  '#166534', // Green
-  '#065F46', // Emerald
-  '#134E4A', // Teal
-  '#164E63', // Cyan
-  '#0C4A6E', // Sky
-  '#1E40AF', // Blue
-  '#3730A3', // Indigo
-  '#5B21B6', // Violet
-  '#6B21A8', // Purple
-  '#86198F', // Fuchsia
-  '#9F1239', // Pink
+  '#5EEAD4', // Teal (dark mode text)
+  '#6EE7B7', // Emerald (dark mode text)
+  '#7DD3FC', // Sky Blue (dark mode text)
+  '#C4B5FD', // Purple (dark mode text)
+  '#FDA4AF', // Rose (dark mode text)
+  '#FCD34D', // Amber (dark mode text)
+  '#FDBA74', // Coral (dark mode text)
+  '#A5B4FC', // Indigo (dark mode text)
+  '#67E8F9', // Cyan (dark mode text)
+  '#BEF264', // Lime (dark mode text)
+  '#E879F9', // Fuchsia (dark mode text)
+  '#FCA5A5', // Red (dark mode text)
+  '#CBD5E1', // Slate (dark mode text)
+  '#10B981', // Mint (light mode text - unique identifier)
+  '#8B5CF6', // Violet (light mode text - unique identifier)
+  '#B45309', // Bronze (light mode text - unique identifier)
 ];

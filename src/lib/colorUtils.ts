@@ -231,7 +231,27 @@ export function ensureAccessibleContrast(
 }
 
 /**
+ * Find a color variant by any of its text colors (dark or light mode)
+ */
+export function findColorVariant(color: string): typeof CATEGORY_COLOR_VARIANTS[string] | null {
+  // First check direct key match (most common case)
+  if (CATEGORY_COLOR_VARIANTS[color]) {
+    return CATEGORY_COLOR_VARIANTS[color];
+  }
+  
+  // Check if color matches any variant's text color in either mode
+  for (const variant of Object.values(CATEGORY_COLOR_VARIANTS)) {
+    if (variant.dark.text === color || variant.light.text === color) {
+      return variant;
+    }
+  }
+  
+  return null;
+}
+
+/**
  * Get inline styles for category pills with proper contrast
+ * Checks if color matches a predefined variant first, otherwise generates styles
  */
 export function getCategoryStyles(
   color: string | undefined,
@@ -241,6 +261,18 @@ export function getCategoryStyles(
   const defaultColor = '#6B7280'; // Gray
   const baseColor = color || defaultColor;
 
+  // Check if this color matches one of our predefined variants
+  const variant = findColorVariant(baseColor);
+  if (variant) {
+    // Use the variant's colors directly
+    const modeColors = isDark ? variant.dark : variant.light;
+    return {
+      backgroundColor: modeColors.bg,
+      color: modeColors.text
+    };
+  }
+
+  // Fallback to generated styles for custom colors not in the variant system
   if (isDark) {
     // For Dark Mode: Vibrant colored text on a subtle background
     // This is much more visible and "colored" than white text on a darkened background
@@ -296,8 +328,96 @@ export function getCategoryPillClasses(
 }
 
 /**
+ * Category color variants - 16 semantic colors with proper bg/text for light and dark modes
+ * Maps text color hex (what's stored in cat.color) to full color definitions
+ */
+export const CATEGORY_COLOR_VARIANTS: Record<string, { textColor: string; dark: { bg: string; text: string }; light: { bg: string; text: string } }> = {
+  '#5EEAD4': { // Teal
+    textColor: '#5EEAD4',
+    dark: { bg: 'rgba(13, 148, 136, 0.25)', text: '#5EEAD4' },
+    light: { bg: 'rgba(204, 251, 241, 0.5)', text: '#0D9488' }
+  },
+  '#6EE7B7': { // Emerald
+    textColor: '#6EE7B7',
+    dark: { bg: 'rgba(5, 150, 105, 0.25)', text: '#6EE7B7' },
+    light: { bg: 'rgba(209, 250, 229, 0.5)', text: '#059669' }
+  },
+  '#7DD3FC': { // Sky Blue
+    textColor: '#7DD3FC',
+    dark: { bg: 'rgba(2, 132, 199, 0.25)', text: '#7DD3FC' },
+    light: { bg: 'rgba(224, 242, 254, 0.5)', text: '#0284C7' }
+  },
+  '#C4B5FD': { // Purple
+    textColor: '#C4B5FD',
+    dark: { bg: 'rgba(124, 58, 237, 0.25)', text: '#C4B5FD' },
+    light: { bg: 'rgba(237, 233, 254, 0.5)', text: '#7C3AED' }
+  },
+  '#FDA4AF': { // Rose
+    textColor: '#FDA4AF',
+    dark: { bg: 'rgba(225, 29, 72, 0.25)', text: '#FDA4AF' },
+    light: { bg: 'rgba(255, 228, 230, 0.5)', text: '#E11D48' }
+  },
+  '#FCD34D': { // Amber
+    textColor: '#FCD34D',
+    dark: { bg: 'rgba(217, 119, 6, 0.25)', text: '#FCD34D' },
+    light: { bg: 'rgba(254, 243, 199, 0.5)', text: '#D97706' }
+  },
+  '#FDBA74': { // Coral
+    textColor: '#FDBA74',
+    dark: { bg: 'rgba(249, 115, 22, 0.25)', text: '#FDBA74' },
+    light: { bg: 'rgba(255, 237, 213, 0.5)', text: '#F97316' }
+  },
+  '#A5B4FC': { // Indigo
+    textColor: '#A5B4FC',
+    dark: { bg: 'rgba(79, 70, 229, 0.25)', text: '#A5B4FC' },
+    light: { bg: 'rgba(224, 231, 255, 0.5)', text: '#4F46E5' }
+  },
+  '#67E8F9': { // Cyan
+    textColor: '#67E8F9',
+    dark: { bg: 'rgba(8, 145, 178, 0.25)', text: '#67E8F9' },
+    light: { bg: 'rgba(207, 250, 254, 0.5)', text: '#0891B2' }
+  },
+  '#BEF264': { // Lime
+    textColor: '#BEF264',
+    dark: { bg: 'rgba(101, 163, 13, 0.25)', text: '#BEF264' },
+    light: { bg: 'rgba(236, 252, 203, 0.5)', text: '#65A30D' }
+  },
+  '#E879F9': { // Fuchsia
+    textColor: '#E879F9',
+    dark: { bg: 'rgba(192, 38, 211, 0.25)', text: '#E879F9' },
+    light: { bg: 'rgba(245, 208, 254, 0.5)', text: '#C026D3' }
+  },
+  '#FCA5A5': { // Red
+    textColor: '#FCA5A5',
+    dark: { bg: 'rgba(220, 38, 38, 0.25)', text: '#FCA5A5' },
+    light: { bg: 'rgba(254, 226, 226, 0.5)', text: '#DC2626' }
+  },
+  '#CBD5E1': { // Slate
+    textColor: '#CBD5E1',
+    dark: { bg: 'rgba(100, 116, 139, 0.25)', text: '#CBD5E1' },
+    light: { bg: 'rgba(226, 232, 240, 0.5)', text: '#475569' }
+  },
+  '#10B981': { // Mint (using light mode text color as identifier since dark mode shares with emerald)
+    textColor: '#10B981',
+    dark: { bg: 'rgba(16, 185, 129, 0.25)', text: '#6EE7B7' },
+    light: { bg: 'rgba(209, 250, 229, 0.5)', text: '#10B981' }
+  },
+  '#8B5CF6': { // Violet (using light mode text color as identifier since dark mode shares with purple)
+    textColor: '#8B5CF6',
+    dark: { bg: 'rgba(139, 92, 246, 0.25)', text: '#C4B5FD' },
+    light: { bg: 'rgba(237, 233, 254, 0.5)', text: '#8B5CF6' }
+  },
+  '#B45309': { // Bronze (using light mode text color as identifier since dark mode shares with amber)
+    textColor: '#B45309',
+    dark: { bg: 'rgba(180, 83, 9, 0.25)', text: '#FCD34D' },
+    light: { bg: 'rgba(254, 215, 170, 0.5)', text: '#B45309' }
+  }
+};
+
+/**
  * Semantic color mapping for category pills
  * Maps category names to predefined colors for consistent appearance
+ * Kept for backward compatibility with category name-based color assignment
  */
 const SEMANTIC_COLORS: Record<string, { dark: { bg: string; text: string }; light: { bg: string; text: string } }> = {
   car: {

@@ -8,7 +8,7 @@ import { prefsRepo } from '@/lib/storage/prefsRepo';
 import { Moon, Sun, Monitor, Type, AlignJustify, Plus, Trash2, Edit2, AlertTriangle, X, Check, Tag, Palette } from 'lucide-react';
 import clsx from 'clsx';
 import { DEFAULT_CATEGORY_COLORS } from '@/lib/types';
-import { getCategoryColors, getCategoryStyles } from '@/lib/colorUtils';
+import { getCategoryColors, getCategoryStyles, CATEGORY_COLOR_VARIANTS, findColorVariant } from '@/lib/colorUtils';
 import { applyTheme } from '@/lib/themeUtils';
 
 interface SettingsSheetProps {
@@ -366,17 +366,36 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
                                 }}
                               >
                                 <div className="grid grid-cols-4 gap-2">
-                                  {DEFAULT_CATEGORY_COLORS.map((color) => (
-                                    <button
-                                      key={color}
-                                      onClick={() => handleColorChange(cat.id, color)}
-                                      className={clsx(
-                                        "w-8 h-8 rounded-full border-2 transition-transform active:scale-90",
-                                        cat.color === color ? "border-black dark:border-white scale-110" : "border-transparent hover:scale-110"
-                                      )}
-                                      style={{ backgroundColor: color }}
-                                    />
-                                  ))}
+                                  {DEFAULT_CATEGORY_COLORS.map((color) => {
+                                    const variant = findColorVariant(color);
+                                    const modeColors = variant ? (isDarkMode ? variant.dark : variant.light) : null;
+                                    return (
+                                      <button
+                                        key={color}
+                                        onClick={() => handleColorChange(cat.id, color)}
+                                        className={clsx(
+                                          "w-8 h-8 rounded-full border-2 transition-transform active:scale-90 relative overflow-hidden",
+                                          cat.color === color ? "border-black dark:border-white scale-110 ring-2 ring-offset-1 ring-blue-500 dark:ring-blue-400" : "border-transparent hover:scale-110"
+                                        )}
+                                        style={modeColors ? {
+                                          backgroundColor: modeColors.bg,
+                                        } : { backgroundColor: color }}
+                                        title={variant ? `${variant.textColor}` : color}
+                                      >
+                                        {modeColors && (
+                                          <div
+                                            className="absolute inset-0 flex items-center justify-center"
+                                            style={{ color: modeColors.text }}
+                                          >
+                                            <div
+                                              className="w-3 h-3 rounded-full"
+                                              style={{ backgroundColor: modeColors.text }}
+                                            />
+                                          </div>
+                                        )}
+                                      </button>
+                                    );
+                                  })}
                                   {/* Clear/Reset to semantic option */}
                                   <button
                                     onClick={() => handleColorChange(cat.id, '')}
