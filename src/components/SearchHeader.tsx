@@ -60,7 +60,7 @@ export function SearchHeader({
               value={localQuery}
               onChange={handleInputChange}
               placeholder="Search"
-              className="w-full h-11 pl-10 pr-10 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              className="w-full h-11 pl-10 pr-10 rounded-2xl border-none bg-[#f5f7fa] dark:bg-[#2a3142] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 outline-none transition-all duration-200 focus:-translate-y-0.5 focus:shadow-[0_4px_12px_rgba(59,130,246,0.15),inset_0_2px_4px_rgba(0,0,0,0.04)] dark:focus:shadow-[0_4px_12px_rgba(59,130,246,0.25),inset_0_2px_4px_rgba(0,0,0,0.2)]"
             />
             {hasSearchText && (
               <button
