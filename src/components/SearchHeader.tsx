@@ -10,6 +10,7 @@ interface SearchHeaderProps {
   filterActiveCount: number;
   onSortClick: () => void;
   sortActive: boolean;
+  sortButtonRef?: React.RefObject<HTMLButtonElement>;
 }
 
 export function SearchHeader({
@@ -19,6 +20,7 @@ export function SearchHeader({
   filterActiveCount,
   onSortClick,
   sortActive,
+  sortButtonRef,
 }: SearchHeaderProps) {
   const [localQuery, setLocalQuery] = useState(searchQuery);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -88,9 +90,12 @@ export function SearchHeader({
 
         {/* Sort Button */}
         <button
+          ref={sortButtonRef}
+          id="sort-button"
           onClick={onSortClick}
           className="relative h-11 w-11 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
           aria-label="Sort"
+          aria-haspopup="menu"
         >
           <ArrowUpDown size={20} />
           {sortActive && (

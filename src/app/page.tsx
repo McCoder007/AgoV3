@@ -5,7 +5,7 @@ import { usePreferences } from '@/hooks/useData';
 import { useDataContext } from '@/contexts/DataContext';
 import { ItemCard } from '@/components/ItemCard';
 import { FilterSheet } from '@/components/FilterSheet';
-import { SortSheet, SortMethod } from '@/components/SortSheet';
+import { SortDropdown, SortMethod } from '@/components/SortDropdown';
 import { SettingsSheet } from '@/components/SettingsSheet';
 import { NewItemSheet } from '@/components/NewItemSheet';
 import { SearchHeader } from '@/components/SearchHeader';
@@ -42,6 +42,7 @@ export default function Home() {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [scrollY, setScrollY] = useState(0);
   const headerRef = useRef<HTMLDivElement>(null);
+  const sortButtonRef = useRef<HTMLButtonElement>(null);
   const isRestoringScroll = useRef(false);
 
   // Track if we need to restore scroll (has saved position) and if restoration is complete
@@ -290,6 +291,7 @@ export default function Home() {
             filterActiveCount={filterActiveCount}
             onSortClick={openSortSheet}
             sortActive={sortActive}
+            sortButtonRef={sortButtonRef}
           />
         </div>
       </div>
@@ -360,11 +362,12 @@ export default function Home() {
         onCategoryChange={setSelectedCategory}
         onCategoryCreated={reloadCategories}
       />
-      <SortSheet
+      <SortDropdown
         isOpen={isSortSheetOpen}
         onClose={closeSortSheet}
         sortMethod={sortMethod}
         onSortChange={setSortMethod}
+        sortButtonRef={sortButtonRef}
       />
       <SettingsSheet
         isOpen={isSettingsSheetOpen}
