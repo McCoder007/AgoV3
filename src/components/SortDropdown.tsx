@@ -11,7 +11,7 @@ interface SortDropdownProps {
   onClose: () => void;
   sortMethod: SortMethod;
   onSortChange: (method: SortMethod) => void;
-  sortButtonRef: React.RefObject<HTMLButtonElement>;
+  sortButtonRef: React.RefObject<HTMLButtonElement | null>;
 }
 
 const SORT_OPTIONS: { value: SortMethod; label: string }[] = [

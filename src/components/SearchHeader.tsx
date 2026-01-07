@@ -10,7 +10,7 @@ interface SearchHeaderProps {
   filterActiveCount: number;
   onSortClick: () => void;
   sortActive: boolean;
-  sortButtonRef?: React.RefObject<HTMLButtonElement>;
+  sortButtonRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
 export function SearchHeader({
