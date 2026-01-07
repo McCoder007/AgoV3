@@ -106,17 +106,31 @@ export function CategoryPicker({
     !categories.some(c => c.name.toLowerCase() === searchQuery.toLowerCase().trim());
 
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col bg-white dark:bg-gray-900 animate-in slide-in-from-bottom duration-300">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Select Category</h2>
-        <button
-          onClick={onClose}
-          className="p-2 -mr-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm z-[200] transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Content */}
+      <div 
+        className="fixed inset-0 z-[201] flex items-center justify-center p-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div 
+          className="w-full max-w-[85vw] h-[85vh] max-h-[85vh] flex flex-col bg-white dark:bg-gray-900 rounded-3xl shadow-2xl animate-in slide-in-from-bottom duration-300 overflow-hidden"
         >
-          <X size={24} />
-        </button>
-      </div>
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Select Category</h2>
+          <button
+            onClick={onClose}
+            className="p-2 -mr-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            <X size={24} />
+          </button>
+        </div>
 
       {/* Search Input */}
       <div className="p-4">
@@ -194,7 +208,9 @@ export function CategoryPicker({
           )}
         </div>
       </div>
-    </div>
+        </div>
+      </div>
+    </>
   );
 }
 
