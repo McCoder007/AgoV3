@@ -190,7 +190,7 @@ export default function ItemDetailPage() {
 
             <main className="flex-1">
                 {/* Action Section */}
-                <section className="px-6 py-6 bg-white dark:bg-black">
+                <section className="px-6 pt-6 pb-4 bg-white dark:bg-black">
                     {daysAgo === 0 && lastLog ? (
                         <div className="w-[75%] mx-auto mb-6 py-[14px] bg-transparent text-text-secondary dark:text-text-secondary rounded-xl text-base font-medium flex items-center justify-center gap-2">
                             <span className="text-2xl text-[#10b981]">✓</span>
@@ -199,9 +199,30 @@ export default function ItemDetailPage() {
                     ) : (
                         <button
                             onClick={handleDone}
-                            className="w-[75%] mx-auto mb-6 py-[14px] bg-[#E3F2FF] dark:bg-[rgba(0,122,255,0.15)] text-[#007AFF] rounded-xl text-base font-medium flex items-center justify-center gap-2 active:bg-[#d0e8ff] dark:active:bg-[rgba(0,122,255,0.25)] transition-colors duration-200 border-none cursor-pointer"
+                            className="w-[75%] mx-auto mb-4
+                                bg-gradient-to-br from-sky-500/[0.12] to-blue-500/[0.15]
+                                dark:bg-gradient-to-br dark:from-blue-500/10 dark:to-sky-500/[0.15]
+                                border border-sky-500/25 dark:border-blue-500/30
+                                rounded-xl
+                                px-8 py-[18px]
+                                text-sky-500 dark:text-white
+                                text-base font-medium
+                                shadow-[0_2px_8px_rgba(14,165,233,0.08)] dark:shadow-[0_4px_12px_rgba(59,130,246,0.1),0_2px_4px_rgba(0,0,0,0.3)]
+                                backdrop-blur-[10px]
+                                flex items-center justify-center gap-2.5
+                                transition-all duration-300
+                                hover:bg-gradient-to-br hover:from-sky-500/[0.18] hover:to-blue-500/20
+                                dark:hover:bg-gradient-to-br dark:hover:from-blue-500/[0.15] dark:hover:to-sky-500/20
+                                hover:border-sky-500/35 dark:hover:border-blue-500/50
+                                hover:shadow-[0_4px_12px_rgba(14,165,233,0.12)] dark:hover:shadow-[0_6px_16px_rgba(59,130,246,0.2),0_2px_4px_rgba(0,0,0,0.4)]
+                                hover:-translate-y-px
+                                active:translate-y-0
+                                active:shadow-[0_2px_6px_rgba(14,165,233,0.1)] dark:active:shadow-[0_4px_10px_rgba(59,130,246,0.15),0_2px_4px_rgba(0,0,0,0.3)]
+                                cursor-pointer"
                         >
-                            <span className="text-2xl">✓</span>
+                            <svg className="w-5 h-5 stroke-current stroke-[3] fill-none" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
                             I Just Did This
                         </button>
                     )}
@@ -209,7 +230,7 @@ export default function ItemDetailPage() {
 
                 {/* History Section */}
                 <section className="bg-white dark:bg-black">
-                    <h3 className="px-6 pt-6 pb-4 text-xl font-bold text-text-primary dark:text-white">
+                    <h3 className="px-6 pt-0 pb-4 text-xl font-bold text-text-primary dark:text-white">
                         History
                     </h3>
 
